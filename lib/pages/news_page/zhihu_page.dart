@@ -1,9 +1,10 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:data_statistics/models/zhihu_model.dart';
+import 'package:data_statistics/pages/news_webview_page.dart';
+import 'package:data_statistics/widgets/platform_section_header.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:grouped_list/grouped_list.dart';
-import 'package:url_launcher/url_launcher.dart';
-
 class ZhihuPage extends StatelessWidget {
   final List<ZHDetailModel> modelList;
   const ZhihuPage({super.key, required this.modelList});
@@ -19,25 +20,26 @@ class ZhihuPage extends StatelessWidget {
         return timeTime.substring(0, 10);
       },
       groupSeparatorBuilder: (String groupByValue) {
-        return Image.asset(
-          'assets/images/zhihu.png',
-          width: 120,
-          height: 50,
+        return const PlatformSectionHeader(
+          title: '知乎热榜',
+          color: Color(0xFF0066FF),
         );
       },
       itemBuilder: (context, ZHDetailModel element) {
-        String timeTime = DateTime.fromMillisecondsSinceEpoch(
+        final timeTime = DateTime.fromMillisecondsSinceEpoch(
           int.parse(element.created) * 1000,
         ).toString().substring(0, 16);
+        final imageHeight = 120.h * 0.618;
         return InkWell(
             onTap: () {
-              Uri url;
-              if (element.type == 'question') {
-                url = Uri.parse('https://www.zhihu.com/question/${element.id}');
-              } else {
-                url = Uri.parse('https://zhuanlan.zhihu.com/p/${element.id}');
-              }
-              launchUrl(url);
+              final url = element.type == 'question'
+                  ? 'https://www.zhihu.com/question/${element.id}'
+                  : 'https://zhuanlan.zhihu.com/p/${element.id}';
+              NewsWebViewPage.open(
+                context,
+                title: element.title,
+                url: url,
+              );
             },
             child: Padding(
               padding: const EdgeInsets.only(bottom: 8, top: 4),
@@ -47,19 +49,17 @@ class ZhihuPage extends StatelessWidget {
                   children: [
                     CachedNetworkImage(
                       imageUrl: element.thumbnail!,
-                      width: 80,
-                      height: 80 * 0.618,
+                      width: 120.w,
+                      height: imageHeight,
                       fit: BoxFit.cover,
                       errorWidget: (context, url, error) {
                         return const FlutterLogo();
                       },
                     ),
-                    const SizedBox(
-                      width: 3,
-                    ),
+                    SizedBox(width: 4.w),
                     Expanded(
                       child: SizedBox(
-                        height: 80 * 0.618,
+                        height: imageHeight,
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -70,10 +70,10 @@ class ZhihuPage extends StatelessWidget {
                               overflow: TextOverflow.ellipsis,
                               style: Theme.of(context).textTheme.bodyLarge,
                             ),
-                            // Text(
-                            //   timeTime,
-                            //   style: Theme.of(context).textTheme.labelSmall,
-                            // ),
+                            Text(
+                              timeTime,
+                              style: Theme.of(context).textTheme.labelSmall,
+                            ),
                           ],
                         ),
                       ),

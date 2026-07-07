@@ -3,6 +3,10 @@ class DSTableDefine {
   static const String baiduTable = 'baiduTable';
   static const String zhihuTable = 'zhihuTable';
   static const String weiboTable = 'weiboTable';
+  static const String sohuTable = 'sohuTable';
+
+  /// 每个平台最多保留的热榜条数
+  static const int maxHotRecords = 60;
 
   /*
     存储类             描述
@@ -68,6 +72,19 @@ class DSTableDefine {
         "scheme"  TEXT,
         'itemid' TEXT,
         'create'  TEXT
+      );
+      ''';
+  }
+
+  createSohuTable() {
+    return '''
+      CREATE TABLE IF NOT EXISTS $sohuTable (
+        "id"    INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+        "title"  TEXT,
+        "url"  TEXT,
+        "img"  TEXT,
+        "itemid"  TEXT,
+        "create"  TEXT
       );
       ''';
   }

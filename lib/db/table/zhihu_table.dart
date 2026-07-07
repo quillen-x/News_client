@@ -5,13 +5,41 @@ import 'package:sqflite/sqlite_api.dart';
 
 class ZhihuTable extends TableOperation {
   Future<List<ZHDetailModel>> query() async {
-    List<Map<String, Object?>> data = await dDatabase.query(DSTableDefine.zhihuTable);
+    final data = await dDatabase.query(
+      DSTableDefine.zhihuTable,
+      orderBy: 'created DESC',
+      limit: DSTableDefine.maxHotRecords,
+    );
     return List.generate(data.length, (index) {
       return ZHDetailModel.fromJson(data[index]);
     });
   }
 
-  Future<int> insertHot(ZHDetailModel zhDetailModel) async {
-    return await dDatabase.insert(DSTableDefine.zhihuTable, zhDetailModel.toJson(), conflictAlgorithm: ConflictAlgorithm.replace);
+  Future<void> insertHotBatch(List<ZHDetailModel> list) async {
+    if (list.isEmpty) return;
+
+    final batch = dDatabase.batch();
+    for (final item in list) {
+      batch.insert(
+        DSTableDefine.zhihuTable,
+        item.toJson(),
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
+    }
+    await batch.commit(noResult: true);
+    await _trimToMax();
+  }
+
+  Future<void> trimToMax() => _trimToMax();
+
+  Future<void> _trimToMax() async {
+    await dDatabase.rawDelete('''
+      DELETE FROM ${DSTableDefine.zhihuTable}
+      WHERE id NOT IN (
+        SELECT id FROM ${DSTableDefine.zhihuTable}
+        ORDER BY created DESC
+        LIMIT ?
+      )
+    ''', [DSTableDefine.maxHotRecords]);
   }
 }

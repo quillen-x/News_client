@@ -5,8 +5,11 @@ import 'package:sqflite/sqflite.dart';
 
 class BaiduTable extends TableOperation {
   Future<List<BDDetailModel>> query() async {
-    List<Map<String, Object?>> data =
-        await dDatabase.query(DSTableDefine.baiduTable,orderBy: 'update_time DESC');
+    final data = await dDatabase.query(
+      DSTableDefine.baiduTable,
+      orderBy: 'update_time DESC',
+      limit: DSTableDefine.maxHotRecords,
+    );
     return List.generate(data.length, (index) {
       return BDDetailModel.fromJson(data[index]);
     });
@@ -25,6 +28,41 @@ class BaiduTable extends TableOperation {
       await dDatabase.insert(DSTableDefine.baiduTable, bdDetailModel.toJson(),
           conflictAlgorithm: ConflictAlgorithm.replace);
     }
+  }
+
+  Future<void> insertHotBatch(List<BDDetailModel> list) async {
+    if (list.isEmpty) return;
+
+    final existing = await dDatabase.query(
+      DSTableDefine.baiduTable,
+      columns: ['query'],
+    );
+    final existingQueries = existing.map((e) => e['query']).toSet();
+
+    final batch = dDatabase.batch();
+    for (final item in list) {
+      if (existingQueries.contains(item.query)) continue;
+      batch.insert(
+        DSTableDefine.baiduTable,
+        item.toJson(),
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
+    }
+    await batch.commit(noResult: true);
+    await _trimToMax();
+  }
+
+  Future<void> trimToMax() => _trimToMax();
+
+  Future<void> _trimToMax() async {
+    await dDatabase.rawDelete('''
+      DELETE FROM ${DSTableDefine.baiduTable}
+      WHERE id NOT IN (
+        SELECT id FROM ${DSTableDefine.baiduTable}
+        ORDER BY update_time DESC
+        LIMIT ?
+      )
+    ''', [DSTableDefine.maxHotRecords]);
   }
 
   Future<int> clearAll() async {

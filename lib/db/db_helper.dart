@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:data_statistics/db/table/baidu_table.dart';
+import 'package:data_statistics/db/table/sohu_table.dart';
 import 'package:data_statistics/db/table/weibo_table.dart';
 import 'package:data_statistics/db/table/zhihu_table.dart';
 import 'package:data_statistics/db/table_define.dart';
@@ -17,6 +18,7 @@ class DbHelper {
   ZhihuTable zhihuTable = ZhihuTable();
   BaiduTable baiduTable = BaiduTable();
   WeiboTable weiboTable = WeiboTable();
+  SohuTable sohuTable = SohuTable();
 
   //私有构造
   DbHelper._();
@@ -52,24 +54,22 @@ class DbHelper {
     print(p.join(path.path, 'statistics', 'hot.db'));
     
     final db = await openDatabase(p.join(path.path, 'statistics', 'hot.db'),
-        version: 1, onCreate: (db, version) {
-      // 数据库创建完成
-      // 创建表 一个自增id 一个text
+        version: 2, onCreate: (db, version) {
       db.execute(dsTableDefine.createCategoryTable());
       db.execute(dsTableDefine.createBaiduTable());
       db.execute(dsTableDefine.createZhihuTable());
       db.execute(dsTableDefine.createWeiboTable());
-    }, onUpgrade: (db, oldV, newV) {
-      // 升级数据库调用
-      ///  db 数据库
-      ///   oldV 旧版本号
-      //   newV 新版本号    
-      //   升级完成就不会在调用这个方法了
+      db.execute(dsTableDefine.createSohuTable());
+    }, onUpgrade: (db, oldV, newV) async {
+      if (oldV < 2) {
+        await db.execute(dsTableDefine.createSohuTable());
+      }
     });
     
     weiboTable.database = db;
     baiduTable.database = db;
     zhihuTable.database = db;
+    sohuTable.database = db;
     return db;
   }
 
