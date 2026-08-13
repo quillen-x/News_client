@@ -1,6 +1,6 @@
 {
-    "name": "data_statistics",
-    "short_name": "data_statistics",
+    "name": "新闻",
+    "short_name": "新闻",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

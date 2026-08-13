@@ -15,38 +15,40 @@ class WeiboTable extends TableOperation {
     });
   }
 
-  Future<bool> queryTitle(String title) async {
-    List<Map<String, Object?>> list = await dDatabase.query(
-        DSTableDefine.weiboTable,
-        where: 'title = ?',
-        whereArgs: [title]);
-    return list.isEmpty;
-  }
-
-  Future<void> insertHot(WBDetailModel bdDetailModel) async {
-    if (await queryTitle(bdDetailModel.title)) {
-      await dDatabase.insert(DSTableDefine.weiboTable, bdDetailModel.toJson(),
-          conflictAlgorithm: ConflictAlgorithm.replace);
-    }
-  }
-
   Future<void> insertHotBatch(List<WBDetailModel> list) async {
     if (list.isEmpty) return;
 
     final existing = await dDatabase.query(
       DSTableDefine.weiboTable,
-      columns: ['title'],
+      columns: ['id', 'title'],
     );
-    final existingTitles = existing.map((e) => e['title']).toSet();
+    final idByTitle = <String, int>{};
+    for (final row in existing) {
+      final title = row['title']?.toString();
+      final id = row['id'];
+      if (title != null && id is int) {
+        idByTitle[title] = id;
+      }
+    }
 
     final batch = dDatabase.batch();
     for (final item in list) {
-      if (existingTitles.contains(item.title)) continue;
-      batch.insert(
-        DSTableDefine.weiboTable,
-        item.toJson(),
-        conflictAlgorithm: ConflictAlgorithm.replace,
-      );
+      final json = item.toJson();
+      final existingId = idByTitle[item.title];
+      if (existingId != null) {
+        batch.update(
+          DSTableDefine.weiboTable,
+          json,
+          where: 'id = ?',
+          whereArgs: [existingId],
+        );
+      } else {
+        batch.insert(
+          DSTableDefine.weiboTable,
+          json,
+          conflictAlgorithm: ConflictAlgorithm.replace,
+        );
+      }
     }
     await batch.commit(noResult: true);
     await _trimToMax();
@@ -63,9 +65,5 @@ class WeiboTable extends TableOperation {
         LIMIT ?
       )
     ''', [DSTableDefine.maxHotRecords]);
-  }
-
-  Future<int> clearAll() async {
-    return await dDatabase.delete(DSTableDefine.weiboTable);
   }
 }

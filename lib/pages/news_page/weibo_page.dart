@@ -4,16 +4,17 @@ import 'package:data_statistics/widgets/platform_section_header.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:grouped_list/grouped_list.dart';
+
 class WeiboPage extends StatelessWidget {
   final List<WBDetailModel> modelList;
   const WeiboPage({super.key, required this.modelList});
 
   @override
   Widget build(BuildContext context) {
-    return  GroupedListView<WBDetailModel, String>(
+    return GroupedListView<WBDetailModel, String>(
       elements: modelList,
       groupBy: (element) {
-        String timeTime = DateTime.fromMillisecondsSinceEpoch(
+        final timeTime = DateTime.fromMillisecondsSinceEpoch(
           int.parse(element.create),
         ).toString();
         return timeTime.substring(0, 10);
@@ -46,6 +47,8 @@ class WeiboPage extends StatelessWidget {
               children: [
                 Text(
                   element.title,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                   style: Theme.of(context).textTheme.bodyLarge,
                 ),
                 SizedBox(height: 4.h),
@@ -64,5 +67,4 @@ class WeiboPage extends StatelessWidget {
       order: GroupedListOrder.DESC,
     );
   }
-
 }

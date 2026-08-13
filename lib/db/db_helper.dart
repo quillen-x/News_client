@@ -9,7 +9,7 @@ import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart' as p;
 
 import 'package:path_provider/path_provider.dart';
-import 'package:sqflite_common_ffi_web/sqflite_ffi_web.dart';
+
 
 /// 数据库帮助类
 class DbHelper {
@@ -40,9 +40,8 @@ class DbHelper {
 
   Future<Database>? _db;
 
-  Future<Database>? getDb() {
-    _db ??= _initDb();
-    return _db;
+  Future<Database> getDb() {
+    return _db ??= _initDb();
   }
 
   // Guaranteed to be called only once.保证只调用一次
@@ -51,11 +50,9 @@ class DbHelper {
     //，则db会调用onUpgrade方法进行更新操作
     
     Directory path = await getApplicationDocumentsDirectory();
-    print(p.join(path.path, 'statistics', 'hot.db'));
-    
+
     final db = await openDatabase(p.join(path.path, 'statistics', 'hot.db'),
         version: 2, onCreate: (db, version) {
-      db.execute(dsTableDefine.createCategoryTable());
       db.execute(dsTableDefine.createBaiduTable());
       db.execute(dsTableDefine.createZhihuTable());
       db.execute(dsTableDefine.createWeiboTable());

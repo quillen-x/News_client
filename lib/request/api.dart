@@ -5,21 +5,35 @@ import 'package:data_statistics/models/sohu_model.dart';
 import 'package:data_statistics/models/weibo_model.dart' as weibo;
 import 'package:data_statistics/models/zhihu_model.dart';
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 
 class Api {
-  static Future<List<BDDetailModel>> getBaiduNews() async {
-    Map<String, dynamic> header = {
-      'User-Agent': 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/99.0.4844.51 Mobile Safari/537.36',
-      'Host': 'top.baidu.com',
-      'Accept': 'application/json, text/plain, */*',
-      'Accept-Language': 'zh-CN,zh;q=0.9,en-US;q=0.8,en;q=0.7',
-      'Accept-Encoding': 'gzip, deflate, br',
-      'Referer': 'https://top.baidu.com/board?tab=realtime',
-    };
+  static const _defaultUserAgent =
+      'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
 
+  static final Dio _dio = Dio(
+    BaseOptions(
+      connectTimeout: const Duration(seconds: 15),
+      receiveTimeout: const Duration(seconds: 15),
+      headers: {
+        'User-Agent': _defaultUserAgent,
+        'Accept': 'application/json, text/plain, */*',
+        'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8',
+      },
+    ),
+  );
+
+  static Future<List<BDDetailModel>> getBaiduNews() async {
     try {
-      final dio = Dio(BaseOptions(headers: header));
-      final response = await dio.get('https://top.baidu.com/api/board?platform=wise&tab=realtime');
+      final response = await _dio.get(
+        'https://top.baidu.com/api/board?platform=wise&tab=realtime',
+        options: Options(headers: {
+          'Host': 'top.baidu.com',
+          'User-Agent':
+              'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/99.0.4844.51 Mobile Safari/537.36',
+          'Referer': 'https://top.baidu.com/board?tab=realtime',
+        }),
+      );
       final cards = response.data?['data']?['cards'] as List?;
       if (cards == null || cards.isEmpty) return [];
 
@@ -29,16 +43,22 @@ class Api {
       final innerContent = outerContent[0]['content'] as List?;
       if (innerContent == null) return [];
 
-      final updateTime = (DateTime.now().millisecondsSinceEpoch ~/ 1000).toString();
+      final updateTime =
+          (DateTime.now().millisecondsSinceEpoch ~/ 1000).toString();
 
       return innerContent.map((item) {
         final map = item as Map<String, dynamic>;
         final word = map['word'] as String? ?? '';
         final url = map['url'] as String? ?? '';
+        final img = map['img']?.toString();
         return BDDetailModel(
           appUrl: url,
-          desc: '',
-          hotScore: map['hotTag']?.toString() ?? map['index']?.toString() ?? '',
+          desc: map['desc']?.toString() ?? '',
+          hotScore: map['hotScore']?.toString() ??
+              map['hotTag']?.toString() ??
+              map['index']?.toString() ??
+              '',
+          img: (img != null && img.isNotEmpty) ? img : null,
           query: word,
           rawUrl: url,
           url: url,
@@ -46,31 +66,36 @@ class Api {
           updateTime: updateTime,
         );
       }).where((item) => item.word.isNotEmpty).toList();
-    } catch (e) {
+    } catch (e, st) {
+      debugPrint('[Api] 百度热搜失败: $e\n$st');
       return [];
     }
   }
 
   static Future<List<ZHModel>> getZhihuNews() async {
     try {
-      var data = await Dio().get('https://api.zhihu.com/topstory/hot-list');
-      ZhiHuModel zhiHuModel = ZhiHuModel.fromJson(data.data);
-      return zhiHuModel.data!;
-    } catch (e) {
+      final response = await _dio.get(
+        'https://api.zhihu.com/topstory/hot-list',
+        options: Options(headers: {
+          'Referer': 'https://www.zhihu.com/',
+        }),
+      );
+      final zhiHuModel = ZhiHuModel.fromJson(response.data);
+      return zhiHuModel.data ?? [];
+    } catch (e, st) {
+      debugPrint('[Api] 知乎热榜失败: $e\n$st');
       return [];
     }
   }
 
   static Future<List<weibo.WBDetailModel>> getWeiboNews() async {
-    Map<String, dynamic> header = {
-      'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-      'Referer': 'https://weibo.com/',
-      'Accept': 'application/json, text/plain, */*',
-    };
-
     try {
-      final dio = Dio(BaseOptions(headers: header));
-      final response = await dio.get('https://weibo.com/ajax/side/hotSearch');
+      final response = await _dio.get(
+        'https://weibo.com/ajax/side/hotSearch',
+        options: Options(headers: {
+          'Referer': 'https://weibo.com/',
+        }),
+      );
       final body = _asJsonMap(response.data);
       if (body['ok'] != 1) return [];
 
@@ -89,29 +114,32 @@ class Api {
           create: create,
         );
       }).where((item) => item.title.isNotEmpty).toList();
-    } catch (e) {
+    } catch (e, st) {
+      debugPrint('[Api] 微博热搜失败: $e\n$st');
       return [];
     }
   }
 
   static Future<List<SohuDetailModel>> getSohuNbaNews() async {
     const pageUrl = 'https://sports.sohu.com/s/nba';
-    final header = {
-      'User-Agent':
-          'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-      'Referer': 'https://sports.sohu.com/',
-      'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-    };
-
     try {
-      final dio = Dio(BaseOptions(headers: header, responseType: ResponseType.plain));
-      final response = await dio.get(pageUrl);
+      final response = await _dio.get(
+        pageUrl,
+        options: Options(
+          responseType: ResponseType.plain,
+          headers: {
+            'Referer': 'https://sports.sohu.com/',
+            'Accept':
+                'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+          },
+        ),
+      );
       final html = response.data?.toString() ?? '';
       final blockData = _parseBlockRenderData(html);
       if (blockData == null) return [];
-
       return _parseFeedConstsizeText(blockData);
-    } catch (e) {
+    } catch (e, st) {
+      debugPrint('[Api] 搜狐 NBA 失败: $e\n$st');
       return [];
     }
   }

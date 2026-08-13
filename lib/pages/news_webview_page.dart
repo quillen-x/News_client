@@ -30,12 +30,14 @@ class NewsWebViewHost extends StatefulWidget {
 
 class _NewsWebViewHostState extends State<NewsWebViewHost> {
   String? _title;
+  String? _loadError;
   WebViewController? _controller;
   int _loadingProgress = 0;
 
   void open({required String title, required String url}) {
     setState(() {
       _title = title;
+      _loadError = null;
       _loadingProgress = 0;
       _controller = _createController(url);
     });
@@ -46,6 +48,7 @@ class _NewsWebViewHostState extends State<NewsWebViewHost> {
     setState(() {
       _controller = null;
       _title = null;
+      _loadError = null;
       _loadingProgress = 0;
     });
   }
@@ -69,6 +72,14 @@ class _NewsWebViewHostState extends State<NewsWebViewHost> {
             if (mounted && _controller != null) {
               setState(() => _loadingProgress = progress);
             }
+          },
+          onWebResourceError: (error) {
+            if (!mounted || _controller == null) return;
+            setState(() {
+              _loadError = error.description.isNotEmpty
+                  ? error.description
+                  : '页面加载失败';
+            });
           },
         ),
       )
@@ -96,13 +107,24 @@ class _NewsWebViewHostState extends State<NewsWebViewHost> {
               child: Column(
                 children: [
                   _buildToolbar(context),
-                  if (_loadingProgress < 100)
+                  if (_loadingProgress < 100 && _loadError == null)
                     LinearProgressIndicator(
                       value: _loadingProgress / 100,
                       minHeight: 2.h,
                     ),
                   Expanded(
-                    child: WebViewWidget(controller: _controller!),
+                    child: _loadError != null
+                        ? Center(
+                            child: Padding(
+                              padding: EdgeInsets.all(24.w),
+                              child: Text(
+                                _loadError!,
+                                textAlign: TextAlign.center,
+                                style: Theme.of(context).textTheme.bodyMedium,
+                              ),
+                            ),
+                          )
+                        : WebViewWidget(controller: _controller!),
                   ),
                 ],
               ),
@@ -124,18 +146,19 @@ class _NewsWebViewHostState extends State<NewsWebViewHost> {
       ),
       child: Row(
         children: [
-         
           Expanded(
-            child: SizedBox(
-             
+            child: Text(
+              _title ?? '',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(context).textTheme.bodyLarge,
             ),
           ),
-           IconButton(
+          IconButton(
             tooltip: '关闭页面',
             icon: const Icon(Icons.close, size: 18),
             onPressed: close,
           ),
-       
         ],
       ),
     );

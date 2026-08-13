@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:data_statistics/db/db_helper.dart';
 import 'package:data_statistics/models/baidu_model.dart' as baidu;
@@ -35,7 +34,8 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
     _loadInitialData();
-    _refreshTimer = Timer.periodic(const Duration(minutes: 10), (_) => refresh());
+    _refreshTimer =
+        Timer.periodic(const Duration(minutes: 10), (_) => refresh());
   }
 
   /// 启动时先读本地缓存立即展示，再后台拉取最新数据
@@ -66,22 +66,15 @@ class _HomePageState extends State<HomePage> {
       ]);
 
       await getAllNews();
+    } catch (e, st) {
+      debugPrint('[Home] 刷新失败: $e\n$st');
     } finally {
       _isRefreshing = false;
     }
   }
 
   Future<void> getAllNews() async {
-    if (Platform.isMacOS || Platform.isWindows || Platform.isLinux) {
-      await DbHelper.instance.getDb();
-    }
-
-    await Future.wait([
-      DbHelper.instance.weiboTable.trimToMax(),
-      DbHelper.instance.baiduTable.trimToMax(),
-      DbHelper.instance.zhihuTable.trimToMax(),
-      DbHelper.instance.sohuTable.trimToMax(),
-    ]);
+    await DbHelper.instance.getDb();
 
     final results = await Future.wait([
       DbHelper.instance.zhihuTable.query(),
@@ -127,6 +120,9 @@ class _HomePageState extends State<HomePage> {
         continue;
       }
 
+      final thumbnail = zhModel.children?.firstOrNull?.thumbnail ??
+          target!.imageUrl;
+
       items.add(ZHDetailModel(
         id: target!.id!,
         title: target.title!,
@@ -134,7 +130,7 @@ class _HomePageState extends State<HomePage> {
         type: target.type!,
         created: target.created!.toString(),
         excerpt: target.excerpt!,
-        thumbnail: zhModel.children?.firstOrNull?.thumbnail,
+        thumbnail: thumbnail,
       ));
     }
 
@@ -154,7 +150,7 @@ class _HomePageState extends State<HomePage> {
       child: Scaffold(
         backgroundColor: Colors.white,
         body: Padding(
-          padding:  EdgeInsets.all(12.w),
+          padding: EdgeInsets.all(12.w),
           child: newsWidget(),
         ),
       ),
@@ -163,22 +159,14 @@ class _HomePageState extends State<HomePage> {
 
   Widget newsWidget() {
     return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Expanded(
-          child: WeiboPage(modelList: wbDetailModelList),
-        ),
-        Expanded(
-          child: ZhihuPage(modelList: zHDetailModelList),
-        ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: BaiduPage(modelList: dDDetailModelList),
-        ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: SohuPage(modelList: sohuDetailModelList),
-        ),
+        Expanded(child: WeiboPage(modelList: wbDetailModelList)),
+        SizedBox(width: 10.w),
+        Expanded(child: ZhihuPage(modelList: zHDetailModelList)),
+        SizedBox(width: 10.w),
+        Expanded(child: BaiduPage(modelList: dDDetailModelList)),
+        SizedBox(width: 10.w),
+        Expanded(child: SohuPage(modelList: sohuDetailModelList)),
       ],
     );
   }

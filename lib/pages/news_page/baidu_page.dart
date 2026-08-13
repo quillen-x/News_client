@@ -5,6 +5,7 @@ import 'package:data_statistics/widgets/platform_section_header.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:grouped_list/grouped_list.dart';
+
 class BaiduPage extends StatelessWidget {
   final List<BDDetailModel> modelList;
   const BaiduPage({super.key, required this.modelList});
@@ -14,7 +15,7 @@ class BaiduPage extends StatelessWidget {
     return GroupedListView<BDDetailModel, String>(
       elements: modelList,
       groupBy: (element) {
-        String timeTime = DateTime.fromMillisecondsSinceEpoch(
+        final timeTime = DateTime.fromMillisecondsSinceEpoch(
           int.parse(element.updateTime) * 1000,
         ).toString();
         return timeTime.substring(0, 10);
@@ -29,6 +30,7 @@ class BaiduPage extends StatelessWidget {
         final timeTime = DateTime.fromMillisecondsSinceEpoch(
           int.parse(element.updateTime) * 1000,
         ).toString().substring(0, 16);
+        final hasImage = element.img != null && element.img!.isNotEmpty;
         final imageHeight = 80.h * 0.618;
         return InkWell(
           onTap: () {
@@ -43,34 +45,33 @@ class BaiduPage extends StatelessWidget {
             );
           },
           child: Padding(
-            padding: const EdgeInsets.only(bottom: 8),
-            child:
-                Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  if (element.img != null && element.img!.isNotEmpty)
-                    CachedNetworkImage(
-                      imageUrl: element.img!,
-                      width: 80.w,
-                      height: imageHeight,
-                      fit: BoxFit.cover,
-                    ),
-                  if (element.img != null && element.img!.isNotEmpty)
-                    const SizedBox(
-                      width: 3,
-                    ),
-                  Expanded(
-                    child: SizedBox(
-                      height: imageHeight,
+            padding: EdgeInsets.only(bottom: 8.h),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (hasImage) ...[
+                      CachedNetworkImage(
+                        imageUrl: element.img!,
+                        width: 80.w,
+                        height: imageHeight,
+                        fit: BoxFit.cover,
+                      ),
+                      SizedBox(width: 3.w),
+                    ],
+                    Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
                             element.word,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
                             style: Theme.of(context).textTheme.bodyLarge,
                           ),
+                          SizedBox(height: 4.h),
                           Text(
                             timeTime,
                             style: Theme.of(context).textTheme.labelSmall,
@@ -78,17 +79,19 @@ class BaiduPage extends StatelessWidget {
                         ],
                       ),
                     ),
-                  )
-                ],
-              ),
-              const SizedBox(height: 4),
-              if (element.desc.isNotEmpty)
-                Text(
-                  element.desc,
-                  maxLines: 5,
-                  style: Theme.of(context).textTheme.bodyMedium,
+                  ],
                 ),
-            ]),
+                if (element.desc.isNotEmpty) ...[
+                  SizedBox(height: 4.h),
+                  Text(
+                    element.desc,
+                    maxLines: 3,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
+                ],
+              ],
+            ),
           ),
         );
       },

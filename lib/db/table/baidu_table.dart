@@ -15,38 +15,40 @@ class BaiduTable extends TableOperation {
     });
   }
 
-  Future<bool> queryTitle(String query) async {
-    List<Map<String, Object?>> list = await dDatabase.query(
-        DSTableDefine.baiduTable,
-        where: 'query = ?',
-        whereArgs: [query]);
-    return list.isEmpty;
-  }
-
-  Future<void> insertHot(BDDetailModel bdDetailModel) async {
-    if (await queryTitle(bdDetailModel.query)) {
-      await dDatabase.insert(DSTableDefine.baiduTable, bdDetailModel.toJson(),
-          conflictAlgorithm: ConflictAlgorithm.replace);
-    }
-  }
-
   Future<void> insertHotBatch(List<BDDetailModel> list) async {
     if (list.isEmpty) return;
 
     final existing = await dDatabase.query(
       DSTableDefine.baiduTable,
-      columns: ['query'],
+      columns: ['id', 'query'],
     );
-    final existingQueries = existing.map((e) => e['query']).toSet();
+    final idByQuery = <String, int>{};
+    for (final row in existing) {
+      final query = row['query']?.toString();
+      final id = row['id'];
+      if (query != null && id is int) {
+        idByQuery[query] = id;
+      }
+    }
 
     final batch = dDatabase.batch();
     for (final item in list) {
-      if (existingQueries.contains(item.query)) continue;
-      batch.insert(
-        DSTableDefine.baiduTable,
-        item.toJson(),
-        conflictAlgorithm: ConflictAlgorithm.replace,
-      );
+      final json = item.toJson()..remove('id');
+      final existingId = idByQuery[item.query];
+      if (existingId != null) {
+        batch.update(
+          DSTableDefine.baiduTable,
+          json,
+          where: 'id = ?',
+          whereArgs: [existingId],
+        );
+      } else {
+        batch.insert(
+          DSTableDefine.baiduTable,
+          json,
+          conflictAlgorithm: ConflictAlgorithm.replace,
+        );
+      }
     }
     await batch.commit(noResult: true);
     await _trimToMax();
@@ -63,9 +65,5 @@ class BaiduTable extends TableOperation {
         LIMIT ?
       )
     ''', [DSTableDefine.maxHotRecords]);
-  }
-
-  Future<int> clearAll() async {
-    return await dDatabase.delete(DSTableDefine.baiduTable);
   }
 }

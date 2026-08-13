@@ -44,6 +44,8 @@ class SohuPage extends StatelessWidget {
               children: [
                 Text(
                   element.title,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                   style: Theme.of(context).textTheme.bodyLarge,
                 ),
                 SizedBox(height: 4.h),
@@ -56,11 +58,7 @@ class SohuPage extends StatelessWidget {
           ),
         );
       },
-      itemComparator: (item1, item2) {
-        final id1 = item1.id ?? 0;
-        final id2 = item2.id ?? 0;
-        return id2.compareTo(id1);
-      },
+      itemComparator: (item1, item2) => item1.create.compareTo(item2.create),
       useStickyGroupSeparators: false,
       floatingHeader: false,
       order: GroupedListOrder.DESC,

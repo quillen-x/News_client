@@ -17,13 +17,13 @@ class ZHDetailModel {
       required this.excerpt});
 
   ZHDetailModel.fromJson(Map<String, dynamic> json) {
-    id = json['id'];
-    title = json['title'];
-    url = json['url'];
-    type = json['type'] ?? '';
-    thumbnail = json['thumbnail'] ?? '';
-    created = json['created'];
-    excerpt = json['excerpt'];
+    id = _asInt(json['id']) ?? 0;
+    title = json['title']?.toString() ?? '';
+    url = json['url']?.toString() ?? '';
+    type = json['type']?.toString() ?? '';
+    thumbnail = json['thumbnail']?.toString();
+    created = json['created']?.toString() ?? '';
+    excerpt = json['excerpt']?.toString() ?? '';
   }
 
   Map<String, dynamic> toJson() {
@@ -37,6 +37,19 @@ class ZHDetailModel {
     data['excerpt'] = excerpt;
     return data;
   }
+}
+
+int? _asInt(dynamic value) {
+  if (value == null) return null;
+  if (value is int) return value;
+  if (value is num) return value.toInt();
+  if (value is String) return int.tryParse(value);
+  return null;
+}
+
+String? _asString(dynamic value) {
+  if (value == null) return null;
+  return value.toString();
 }
 
 class ZhiHuModel {
@@ -61,9 +74,9 @@ class ZhiHuModel {
       });
     }
     paging = json['paging'] != null ? Paging.fromJson(json['paging']) : null;
-    freshText = json['fresh_text'];
-    displayNum = json['display_num'];
-    fbBillMainRise = json['fb_bill_main_rise'];
+    freshText = _asString(json['fresh_text']);
+    displayNum = _asInt(json['display_num']);
+    fbBillMainRise = _asInt(json['fb_bill_main_rise']);
   }
 
   Map<String, dynamic> toJson() {
@@ -106,15 +119,15 @@ class ZHModel {
       this.children});
 
   ZHModel.fromJson(Map<String, dynamic> json) {
-    type = json['type'];
-    styleType = json['style_type'];
-    id = json['id'];
-    cardId = json['card_id'];
+    type = _asString(json['type']);
+    styleType = _asString(json['style_type']);
+    id = _asString(json['id']);
+    cardId = _asString(json['card_id']);
     target = json['target'] != null ? Target.fromJson(json['target']) : null;
-    attachedInfo = json['attached_info'];
-    detailText = json['detail_text'];
-    trend = json['trend'];
-    debut = json['debut'];
+    attachedInfo = _asString(json['attached_info']);
+    detailText = _asString(json['detail_text']);
+    trend = _asInt(json['trend']);
+    debut = json['debut'] is bool ? json['debut'] as bool : null;
     if (json['children'] != null) {
       children = [];
       json['children'].forEach((v) {
@@ -184,25 +197,25 @@ class Target {
       this.previewText});
 
   Target.fromJson(Map<String, dynamic> json) {
-    id = json['id'];
-    title = json['title'];
-    excerptTitle = json['excerpt_title'];
-    type = json['type'];
-    voteupCount = json['voteup_count'];
-    voting = json['voting'];
-    commentCount = json['comment_count'];
-    url = json['url'];
-    imageUrl = json['image_url'];
-    updated = json['updated'];
-    created = json['created'];
-    commentPermission = json['comment_permission'];
+    id = _asInt(json['id']);
+    title = _asString(json['title']);
+    excerptTitle = _asString(json['excerpt_title']);
+    type = _asString(json['type']);
+    voteupCount = _asInt(json['voteup_count']);
+    voting = _asInt(json['voting']);
+    commentCount = _asInt(json['comment_count']);
+    url = _asString(json['url']);
+    imageUrl = _asString(json['image_url']);
+    updated = _asInt(json['updated']);
+    created = _asInt(json['created']);
+    commentPermission = _asString(json['comment_permission']);
     author = json['author'] != null ? Author.fromJson(json['author']) : null;
     linkbox =
         json['linkbox'] != null ? Linkbox.fromJson(json['linkbox']) : null;
-    excerpt = json['excerpt'];
-    excerptNew = json['excerpt_new'];
-    previewType = json['preview_type'];
-    previewText = json['preview_text'];
+    excerpt = _asString(json['excerpt']);
+    excerptNew = _asString(json['excerpt_new']);
+    previewType = _asString(json['preview_type']);
+    previewText = _asString(json['preview_text']);
   }
 
   Map<String, dynamic> toJson() {
@@ -254,14 +267,14 @@ class Author {
       this.avatarUrl});
 
   Author.fromJson(Map<String, dynamic> json) {
-    type = json['type'];
-    userType = json['user_type'];
-    id = json['id'];
-    urlToken = json['url_token'];
-    url = json['url'];
-    name = json['name'];
-    headline = json['headline'];
-    avatarUrl = json['avatar_url'];
+    type = _asString(json['type']);
+    userType = _asString(json['user_type']);
+    id = _asString(json['id']);
+    urlToken = _asString(json['url_token']);
+    url = _asString(json['url']);
+    name = _asString(json['name']);
+    headline = _asString(json['headline']);
+    avatarUrl = _asString(json['avatar_url']);
   }
 
   Map<String, dynamic> toJson() {

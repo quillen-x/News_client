@@ -7,7 +7,7 @@ class SohuTable extends TableOperation {
   Future<List<SohuDetailModel>> query() async {
     final data = await dDatabase.query(
       DSTableDefine.sohuTable,
-      orderBy: 'id DESC',
+      orderBy: '"create" DESC',
       limit: DSTableDefine.maxHotRecords,
     );
     return List.generate(data.length, (index) {
@@ -20,18 +20,35 @@ class SohuTable extends TableOperation {
 
     final existing = await dDatabase.query(
       DSTableDefine.sohuTable,
-      columns: ['itemid'],
+      columns: ['id', 'itemid'],
     );
-    final existingIds = existing.map((e) => e['itemid']).toSet();
+    final idByItemId = <String, int>{};
+    for (final row in existing) {
+      final itemId = row['itemid']?.toString();
+      final id = row['id'];
+      if (itemId != null && id is int) {
+        idByItemId[itemId] = id;
+      }
+    }
 
     final batch = dDatabase.batch();
     for (final item in list) {
-      if (existingIds.contains(item.itemid)) continue;
-      batch.insert(
-        DSTableDefine.sohuTable,
-        item.toJson(),
-        conflictAlgorithm: ConflictAlgorithm.replace,
-      );
+      final json = item.toJson()..remove('id');
+      final existingId = idByItemId[item.itemid];
+      if (existingId != null) {
+        batch.update(
+          DSTableDefine.sohuTable,
+          json,
+          where: 'id = ?',
+          whereArgs: [existingId],
+        );
+      } else {
+        batch.insert(
+          DSTableDefine.sohuTable,
+          json,
+          conflictAlgorithm: ConflictAlgorithm.replace,
+        );
+      }
     }
     await batch.commit(noResult: true);
     await trimToMax();
@@ -44,13 +61,9 @@ class SohuTable extends TableOperation {
       DELETE FROM ${DSTableDefine.sohuTable}
       WHERE id NOT IN (
         SELECT id FROM ${DSTableDefine.sohuTable}
-        ORDER BY id DESC
+        ORDER BY "create" DESC
         LIMIT ?
       )
     ''', [DSTableDefine.maxHotRecords]);
-  }
-
-  Future<int> clearAll() async {
-    return dDatabase.delete(DSTableDefine.sohuTable);
   }
 }

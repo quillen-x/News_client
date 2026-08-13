@@ -2,7 +2,7 @@
     package="com.example.data_statistics">
     <uses-permission android:name="android.permission.INTERNET" />
    <application
-        android:label="data_statistics"
+        android:label="新闻"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity
