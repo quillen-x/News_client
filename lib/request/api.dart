@@ -89,35 +89,59 @@ class Api {
   }
 
   static Future<List<weibo.WBDetailModel>> getWeiboNews() async {
-    try {
-      final response = await _dio.get(
-        'https://weibo.com/ajax/side/hotSearch',
-        options: Options(headers: {
-          'Referer': 'https://weibo.com/',
-        }),
-      );
-      final body = _asJsonMap(response.data);
-      if (body['ok'] != 1) return [];
+    const urls = [
+      'https://weibo.com/ajax/side/hotSearch',
+      'https://www.weibo.com/ajax/side/hotSearch',
+    ];
 
-      final realtime = body['data']?['realtime'] as List?;
-      if (realtime == null) return [];
+    Object? lastError;
+    StackTrace? lastStack;
 
-      final create = DateTime.now().millisecondsSinceEpoch.toString();
-      return realtime.map((item) {
-        final map = item as Map<String, dynamic>;
-        final title = map['note'] as String? ?? map['word'] as String? ?? '';
-        final word = map['word'] as String? ?? title;
-        return weibo.WBDetailModel(
-          title: title,
-          scheme: 'https://s.weibo.com/weibo?q=${Uri.encodeComponent(word)}',
-          itemid: map['realpos']?.toString() ?? word,
-          create: create,
-        );
-      }).where((item) => item.title.isNotEmpty).toList();
-    } catch (e, st) {
-      debugPrint('[Api] 微博热搜失败: $e\n$st');
-      return [];
+    for (final url in urls) {
+      for (var attempt = 0; attempt < 2; attempt++) {
+        try {
+          if (attempt > 0) {
+            await Future<void>.delayed(const Duration(milliseconds: 400));
+          }
+          final response = await _dio.get(
+            url,
+            options: Options(headers: {
+              'Referer': 'https://weibo.com/',
+              'Origin': 'https://weibo.com',
+            }),
+          );
+          final body = _asJsonMap(response.data);
+          if (body['ok'] != 1) continue;
+
+          final realtime = body['data']?['realtime'] as List?;
+          if (realtime == null) continue;
+
+          final create = DateTime.now().millisecondsSinceEpoch.toString();
+          return realtime.map((item) {
+            final map = item as Map<String, dynamic>;
+            final title =
+                map['note'] as String? ?? map['word'] as String? ?? '';
+            final word = map['word'] as String? ?? title;
+            return weibo.WBDetailModel(
+              title: title,
+              scheme:
+                  'https://s.weibo.com/weibo?q=${Uri.encodeComponent(word)}',
+              itemid: map['realpos']?.toString() ?? word,
+              create: create,
+            );
+          }).where((item) => item.title.isNotEmpty).toList();
+        } catch (e, st) {
+          lastError = e;
+          lastStack = st;
+          final isDnsError = e.toString().contains('Failed host lookup') ||
+              e.toString().contains('SocketException');
+          if (!isDnsError) break;
+        }
+      }
     }
+
+    debugPrint('[Api] 微博热搜失败: $lastError\n$lastStack');
+    return [];
   }
 
   static Future<List<SohuDetailModel>> getSohuNbaNews() async {
