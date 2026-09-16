@@ -5,7 +5,7 @@ class ThemeController extends ChangeNotifier {
 
   static final ThemeController instance = ThemeController._();
 
-  ThemeMode _themeMode = ThemeMode.light;
+  ThemeMode _themeMode = ThemeMode.dark;
 
   ThemeMode get themeMode => _themeMode;
 
