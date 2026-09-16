@@ -60,8 +60,7 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
     _loadInitialData();
-    _refreshTimer =
-        Timer.periodic(const Duration(minutes: 10), (_) => refresh());
+    _scheduleNextRefresh();
   }
 
   /// 启动时先读本地缓存立即展示，再后台拉取最新数据
@@ -75,6 +74,30 @@ class _HomePageState extends State<HomePage> {
   void dispose() {
     _refreshTimer?.cancel();
     super.dispose();
+  }
+
+  /// 周一至周五 9:00–18:00 每 30 分钟；其余时间每 15 分钟
+  Duration _refreshInterval([DateTime? now]) {
+    final time = now ?? DateTime.now();
+    final isWeekday = time.weekday >= DateTime.monday &&
+        time.weekday <= DateTime.friday;
+    final minutes = time.hour * 60 + time.minute;
+    final inWorkHours = minutes >= 9 * 60 && minutes < 18 * 60;
+    if (isWeekday && inWorkHours) {
+      return const Duration(minutes: 30);
+    }
+    return const Duration(minutes: 15);
+  }
+
+  void _scheduleNextRefresh() {
+    _refreshTimer?.cancel();
+    final interval = _refreshInterval();
+    debugPrint('[Home] 下次刷新间隔: ${interval.inMinutes} 分钟');
+    _refreshTimer = Timer(interval, () async {
+      await refresh();
+      if (!mounted) return;
+      _scheduleNextRefresh();
+    });
   }
 
   Future<void> refresh() async {
@@ -266,16 +289,16 @@ class _HomePageState extends State<HomePage> {
     final platforms = <Widget>[
       WeiboPage(modelList: wbDetailModelList),
       ZhihuPage(modelList: zHDetailModelList),
-      BaiduPage(modelList: dDDetailModelList),
-      SohuPage(modelList: sohuDetailModelList),
-      Kr36Page(modelList: kr36DetailModelList),
       HuxiuPage(modelList: huxiuDetailModelList),
-      IthomePage(modelList: ithomeDetailModelList),
-      JuejinPage(modelList: juejinDetailModelList),
+      Kr36Page(modelList: kr36DetailModelList),
       HupuPage(modelList: hupuDetailModelList),
+      HupuNbaPage(modelList: hupuNbaDetailModelList),
       QqMusicPage(modelList: qqMusicDetailModelList),
       NeteasePage(modelList: neteaseDetailModelList),
-      HupuNbaPage(modelList: hupuNbaDetailModelList),
+      SohuPage(modelList: sohuDetailModelList),
+      BaiduPage(modelList: dDDetailModelList),
+      IthomePage(modelList: ithomeDetailModelList),
+      JuejinPage(modelList: juejinDetailModelList),
     ];
 
     return LayoutBuilder(

@@ -50,7 +50,7 @@ class _NewsListItemState extends State<NewsListItem> {
             borderRadius: BorderRadius.circular(4.r),
             hoverColor: Colors.transparent,
             child: Padding(
-              padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 5.h),
+              padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 5.h),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
