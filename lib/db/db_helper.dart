@@ -1,11 +1,14 @@
 import 'dart:io';
 
 import 'package:data_statistics/db/table/baidu_table.dart';
+import 'package:data_statistics/db/table/hupu_nba_table.dart';
 import 'package:data_statistics/db/table/hupu_table.dart';
 import 'package:data_statistics/db/table/huxiu_table.dart';
 import 'package:data_statistics/db/table/ithome_table.dart';
 import 'package:data_statistics/db/table/juejin_table.dart';
 import 'package:data_statistics/db/table/kr36_table.dart';
+import 'package:data_statistics/db/table/netease_table.dart';
+import 'package:data_statistics/db/table/qqmusic_table.dart';
 import 'package:data_statistics/db/table/sohu_table.dart';
 import 'package:data_statistics/db/table/weibo_table.dart';
 import 'package:data_statistics/db/table/zhihu_table.dart';
@@ -26,6 +29,9 @@ class DbHelper {
   IthomeTable ithomeTable = IthomeTable();
   JuejinTable juejinTable = JuejinTable();
   HupuTable hupuTable = HupuTable();
+  QqMusicTable qqMusicTable = QqMusicTable();
+  NeteaseTable neteaseTable = NeteaseTable();
+  HupuNbaTable hupuNbaTable = HupuNbaTable();
 
   //私有构造
   DbHelper._();
@@ -49,7 +55,7 @@ class DbHelper {
     Directory path = await getApplicationDocumentsDirectory();
 
     final db = await openDatabase(p.join(path.path, 'statistics', 'hot.db'),
-        version: 5, onCreate: (db, version) {
+        version: 7, onCreate: (db, version) {
       db.execute(dsTableDefine.createBaiduTable());
       db.execute(dsTableDefine.createZhihuTable());
       db.execute(dsTableDefine.createWeiboTable());
@@ -59,6 +65,9 @@ class DbHelper {
       db.execute(dsTableDefine.createIthomeTable());
       db.execute(dsTableDefine.createJuejinTable());
       db.execute(dsTableDefine.createHupuTable());
+      db.execute(dsTableDefine.createQqMusicTable());
+      db.execute(dsTableDefine.createNeteaseTable());
+      db.execute(dsTableDefine.createHupuNbaTable());
     }, onUpgrade: (db, oldV, newV) async {
       if (oldV < 2) {
         await db.execute(dsTableDefine.createSohuTable());
@@ -74,6 +83,13 @@ class DbHelper {
         await db.execute(dsTableDefine.createJuejinTable());
         await db.execute(dsTableDefine.createHupuTable());
       }
+      if (oldV < 6) {
+        await db.execute(dsTableDefine.createQqMusicTable());
+        await db.execute(dsTableDefine.createNeteaseTable());
+      }
+      if (oldV < 7) {
+        await db.execute(dsTableDefine.createHupuNbaTable());
+      }
     });
 
     weiboTable.database = db;
@@ -85,6 +101,9 @@ class DbHelper {
     ithomeTable.database = db;
     juejinTable.database = db;
     hupuTable.database = db;
+    qqMusicTable.database = db;
+    neteaseTable.database = db;
+    hupuNbaTable.database = db;
     return db;
   }
 

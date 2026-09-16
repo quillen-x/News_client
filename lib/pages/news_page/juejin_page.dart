@@ -11,7 +11,7 @@ class JuejinPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return PlatformNewsPanel(
-      title: '掘金最新',
+      title: '掘金推荐',
       accentColor: const Color(0xFF1E80FF),
       child: ListView.builder(
         padding: EdgeInsets.zero,
@@ -20,9 +20,6 @@ class JuejinPage extends StatelessWidget {
           final element = modelList[index];
           return NewsListItem(
             title: element.title,
-            subtitle: (element.summary != null && element.summary!.isNotEmpty)
-                ? element.summary
-                : null,
             onTap: () {
               NewsWebViewPage.open(
                 context,

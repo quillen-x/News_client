@@ -23,8 +23,6 @@ class BaiduPage extends StatelessWidget {
           final hasImage = element.img != null && element.img!.isNotEmpty;
           return NewsListItem(
             title: element.word,
-            subtitle: element.desc.isNotEmpty ? element.desc : null,
-            subtitleMaxLines: 2,
             leading: hasImage
                 ? ClipRRect(
                     borderRadius: BorderRadius.circular(4.r),

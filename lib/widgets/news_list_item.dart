@@ -1,21 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
-/// 统一的资讯列表项：标题 + 可选摘要，带桌面悬停反馈。
+/// 统一的资讯列表项：标题，带桌面悬停反馈。
 class NewsListItem extends StatefulWidget {
   final String title;
-  final String? subtitle;
   final int titleMaxLines;
-  final int subtitleMaxLines;
   final Widget? leading;
   final VoidCallback onTap;
 
   const NewsListItem({
     super.key,
     required this.title,
-    this.subtitle,
     this.titleMaxLines = 2,
-    this.subtitleMaxLines = 2,
     this.leading,
     required this.onTap,
   });
@@ -42,52 +38,35 @@ class _NewsListItemState extends State<NewsListItem> {
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 120),
         curve: Curves.easeOut,
-        margin: EdgeInsets.only(bottom: 2.h),
+        margin: EdgeInsets.only(bottom: 1.h),
         decoration: BoxDecoration(
           color: _hovering ? hoverColor : Colors.transparent,
-          borderRadius: BorderRadius.circular(6.r),
+          borderRadius: BorderRadius.circular(4.r),
         ),
         child: Material(
           color: Colors.transparent,
           child: InkWell(
             onTap: widget.onTap,
-            borderRadius: BorderRadius.circular(6.r),
+            borderRadius: BorderRadius.circular(4.r),
             hoverColor: Colors.transparent,
             child: Padding(
-              padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 6.h),
+              padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 5.h),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   if (widget.leading != null) ...[
                     widget.leading!,
-                    SizedBox(width: 8.w),
+                    SizedBox(width: 6.w),
                   ],
                   Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          widget.title,
-                          maxLines: widget.titleMaxLines,
-                          overflow: TextOverflow.ellipsis,
-                          style: theme.textTheme.bodyLarge?.copyWith(
-                            height: 1.35,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                        if (widget.subtitle != null &&
-                            widget.subtitle!.isNotEmpty) ...[
-                          SizedBox(height: 3.h),
-                          Text(
-                            widget.subtitle!,
-                            maxLines: widget.subtitleMaxLines,
-                            overflow: TextOverflow.ellipsis,
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                              height: 1.35,
-                            ),
-                          ),
-                        ],
-                      ],
+                    child: Text(
+                      widget.title,
+                      maxLines: widget.titleMaxLines,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.bodyLarge?.copyWith(
+                        height: 1.35,
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
                   ),
                 ],

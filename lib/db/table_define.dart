@@ -9,6 +9,9 @@ class DSTableDefine {
   static const String ithomeTable = 'ithomeTable';
   static const String juejinTable = 'juejinTable';
   static const String hupuTable = 'hupuTable';
+  static const String qqMusicTable = 'qqMusicTable';
+  static const String neteaseTable = 'neteaseTable';
+  static const String hupuNbaTable = 'hupuNbaTable';
 
   /// 每个平台最多保留的热榜条数
   static const int maxHotRecords = 60;
@@ -148,6 +151,42 @@ class DSTableDefine {
   createHupuTable() {
     return '''
       CREATE TABLE IF NOT EXISTS $hupuTable (
+        "id"    INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+        "title"  TEXT,
+        "url"  TEXT,
+        "itemid"  TEXT,
+        "create"  TEXT
+      );
+      ''';
+  }
+
+  createQqMusicTable() {
+    return '''
+      CREATE TABLE IF NOT EXISTS $qqMusicTable (
+        "id"    INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+        "title"  TEXT,
+        "url"  TEXT,
+        "itemid"  TEXT,
+        "create"  TEXT
+      );
+      ''';
+  }
+
+  createNeteaseTable() {
+    return '''
+      CREATE TABLE IF NOT EXISTS $neteaseTable (
+        "id"    INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+        "title"  TEXT,
+        "url"  TEXT,
+        "itemid"  TEXT,
+        "create"  TEXT
+      );
+      ''';
+  }
+
+  createHupuNbaTable() {
+    return '''
+      CREATE TABLE IF NOT EXISTS $hupuNbaTable (
         "id"    INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
         "title"  TEXT,
         "url"  TEXT,

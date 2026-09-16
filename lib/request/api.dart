@@ -2,10 +2,13 @@ import 'dart:convert';
 
 import 'package:data_statistics/models/baidu_model.dart';
 import 'package:data_statistics/models/hupu_model.dart';
+import 'package:data_statistics/models/hupu_nba_model.dart';
 import 'package:data_statistics/models/huxiu_model.dart';
 import 'package:data_statistics/models/ithome_model.dart';
 import 'package:data_statistics/models/juejin_model.dart';
 import 'package:data_statistics/models/kr36_model.dart';
+import 'package:data_statistics/models/netease_model.dart';
+import 'package:data_statistics/models/qqmusic_model.dart';
 import 'package:data_statistics/models/sohu_model.dart';
 import 'package:data_statistics/models/weibo_model.dart' as weibo;
 import 'package:data_statistics/models/zhihu_model.dart';
@@ -343,12 +346,12 @@ class Api {
         data: {
           'id_type': 2,
           'client_type': 2608,
-          'sort_type': 300, // 最新
+          'sort_type': 200, // 推荐
           'cursor': '0',
           'limit': 20,
         },
         options: Options(headers: {
-          'Referer': 'https://juejin.cn/?sort=newest',
+          'Referer': 'https://juejin.cn/recommended',
           'Origin': 'https://juejin.cn',
           'Content-Type': 'application/json',
           'Accept': 'application/json, text/plain, */*',
@@ -387,7 +390,7 @@ class Api {
       }
       return articles.take(60).toList();
     } catch (e, st) {
-      debugPrint('[Api] 掘金最新失败: $e\n$st');
+      debugPrint('[Api] 掘金推荐失败: $e\n$st');
       return [];
     }
   }
@@ -395,7 +398,7 @@ class Api {
   static Future<List<HupuDetailModel>> getHupuBxjNews() async {
     try {
       final response = await _dio.get(
-        'https://bbs.hupu.com/bxj',
+        'https://bbs.hupu.com/all-gambia',
         options: Options(
           responseType: ResponseType.plain,
           headers: {
@@ -406,17 +409,17 @@ class Api {
         ),
       );
       final html = response.data?.toString() ?? '';
-      return _parseHupuBxj(html);
+      return _parseHupuGambia(html);
     } catch (e, st) {
       debugPrint('[Api] 虎扑步行街失败: $e\n$st');
       return [];
     }
   }
 
-  /// 解析虎扑步行街主干道帖子列表
-  static List<HupuDetailModel> _parseHupuBxj(String html) {
+  /// 解析虎扑步行街热帖（all-gambia）
+  static List<HupuDetailModel> _parseHupuGambia(String html) {
     final pattern = RegExp(
-      r'href="(/\d+\.html)"[^>]*class="[^"]*p-title[^"]*"[^>]*>(.*?)</a>',
+      r'href="(/\d+\.html)"[^>]*>\s*<span class="t-title">(.*?)</span>',
       caseSensitive: false,
       dotAll: true,
     );
@@ -428,7 +431,7 @@ class Api {
 
     for (final match in pattern.allMatches(html)) {
       final path = match.group(1) ?? '';
-      var title = _stripHtml(match.group(2) ?? '');
+      final title = _stripHtml(match.group(2) ?? '');
       if (path.isEmpty || title.isEmpty || !seen.add(path)) continue;
 
       articles.add(HupuDetailModel(
@@ -438,6 +441,180 @@ class Api {
         create: (baseTime - index).toString(),
       ));
       index++;
+    }
+    return articles.take(60).toList();
+  }
+
+  static Future<List<QqMusicDetailModel>> getQqMusicHotSongs() async {
+    try {
+      final response = await _dio.post(
+        'https://u.y.qq.com/cgi-bin/musicu.fcg',
+        data: {
+          'detail': {
+            'module': 'musicToplist.ToplistInfoServer',
+            'method': 'GetDetail',
+            'param': {
+              'topId': 4,
+              'offset': 0,
+              'num': 50,
+              'period': '',
+            },
+          },
+        },
+        options: Options(headers: {
+          'Referer': 'https://y.qq.com/n/ryqq/toplist/4',
+          'Origin': 'https://y.qq.com',
+          'Content-Type': 'application/json',
+          'Accept': 'application/json, text/plain, */*',
+        }),
+      );
+      final body = _asJsonMap(response.data);
+      final list = body['detail']?['data']?['songInfoList'];
+      if (list is! List) return [];
+
+      final songs = <QqMusicDetailModel>[];
+      final baseTime = DateTime.now().millisecondsSinceEpoch;
+      for (var i = 0; i < list.length; i++) {
+        final item = list[i];
+        if (item is! Map) continue;
+        final map = Map<String, dynamic>.from(item);
+        final mid = map['mid']?.toString() ?? '';
+        final name = map['title']?.toString() ?? map['name']?.toString() ?? '';
+        if (mid.isEmpty || name.isEmpty) continue;
+
+        final singers = map['singer'];
+        var artist = '';
+        if (singers is List && singers.isNotEmpty) {
+          artist = singers
+              .whereType<Map>()
+              .map((s) => s['name']?.toString() ?? s['title']?.toString() ?? '')
+              .where((s) => s.isNotEmpty)
+              .join('/');
+        }
+
+        songs.add(QqMusicDetailModel(
+          title: artist.isEmpty ? name : '$name - $artist',
+          url: 'https://y.qq.com/n/ryqq/songDetail/$mid',
+          itemid: mid,
+          create: (baseTime - i).toString(),
+        ));
+      }
+      return songs.take(60).toList();
+    } catch (e, st) {
+      debugPrint('[Api] QQ音乐热歌榜失败: $e\n$st');
+      return [];
+    }
+  }
+
+  static Future<List<NeteaseDetailModel>> getNeteaseHotSongs() async {
+    try {
+      final response = await _dio.get(
+        'https://music.163.com/api/playlist/detail',
+        queryParameters: {'id': 3778678},
+        options: Options(headers: {
+          'Referer': 'https://music.163.com/',
+          'Accept': 'application/json, text/plain, */*',
+        }),
+      );
+      final body = _asJsonMap(response.data);
+      final tracks = body['result']?['tracks'] ?? body['playlist']?['tracks'];
+      if (tracks is! List) return [];
+
+      final songs = <NeteaseDetailModel>[];
+      final baseTime = DateTime.now().millisecondsSinceEpoch;
+      for (var i = 0; i < tracks.length; i++) {
+        final item = tracks[i];
+        if (item is! Map) continue;
+        final map = Map<String, dynamic>.from(item);
+        final songId = map['id']?.toString() ?? '';
+        final name = map['name']?.toString() ?? '';
+        if (songId.isEmpty || name.isEmpty) continue;
+
+        final artists = map['ar'] ?? map['artists'];
+        var artist = '';
+        if (artists is List && artists.isNotEmpty) {
+          artist = artists
+              .whereType<Map>()
+              .map((a) => a['name']?.toString() ?? '')
+              .where((s) => s.isNotEmpty)
+              .join('/');
+        }
+
+        songs.add(NeteaseDetailModel(
+          title: artist.isEmpty ? name : '$name - $artist',
+          url: 'https://music.163.com/#/song?id=$songId',
+          itemid: songId,
+          create: (baseTime - i).toString(),
+        ));
+      }
+      return songs.take(60).toList();
+    } catch (e, st) {
+      debugPrint('[Api] 网易云热歌榜失败: $e\n$st');
+      return [];
+    }
+  }
+
+  static Future<List<HupuNbaDetailModel>> getHupuNbaNews() async {
+    try {
+      final response = await _dio.get(
+        'https://m.hupu.com/nba',
+        options: Options(
+          responseType: ResponseType.plain,
+          headers: {
+            'Referer': 'https://m.hupu.com/',
+            'Accept':
+                'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+            'User-Agent':
+                'Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.0 Mobile/15E148 Safari/604.1',
+          },
+        ),
+      );
+      final html = response.data?.toString() ?? '';
+      return _parseHupuNbaNextData(html);
+    } catch (e, st) {
+      debugPrint('[Api] 虎扑NBA失败: $e\n$st');
+      return [];
+    }
+  }
+
+  /// 解析 m.hupu.com/nba 页面 __NEXT_DATA__
+  static List<HupuNbaDetailModel> _parseHupuNbaNextData(String html) {
+    const marker = '<script id="__NEXT_DATA__" type="application/json">';
+    final start = html.indexOf(marker);
+    if (start == -1) return [];
+    final jsonStart = start + marker.length;
+    final end = html.indexOf('</script>', jsonStart);
+    if (end == -1) return [];
+
+    final data = Map<String, dynamic>.from(
+      json.decode(html.substring(jsonStart, end)) as Map,
+    );
+    final newsData = data['props']?['pageProps']?['newsData'];
+    if (newsData is! List) return [];
+
+    final articles = <HupuNbaDetailModel>[];
+    final seen = <String>{};
+    final baseTime = DateTime.now().millisecondsSinceEpoch;
+
+    for (var i = 0; i < newsData.length; i++) {
+      final item = newsData[i];
+      if (item is! Map) continue;
+      final map = Map<String, dynamic>.from(item);
+      final title = map['title']?.toString() ?? '';
+      var url = map['link']?.toString() ?? '';
+      final itemId = map['nid']?.toString() ??
+          map['tid']?.toString() ??
+          url;
+      if (title.isEmpty || url.isEmpty || !seen.add(itemId)) continue;
+      if (url.startsWith('//')) url = 'https:$url';
+      if (url.startsWith('/')) url = 'https://m.hupu.com$url';
+
+      articles.add(HupuNbaDetailModel(
+        title: title,
+        url: url,
+        itemid: itemId,
+        create: map['publishTime']?.toString() ?? (baseTime - i).toString(),
+      ));
     }
     return articles.take(60).toList();
   }

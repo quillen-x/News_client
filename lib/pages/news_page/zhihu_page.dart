@@ -20,8 +20,6 @@ class ZhihuPage extends StatelessWidget {
           final element = modelList[index];
           return NewsListItem(
             title: element.title,
-            subtitle: element.excerpt.isNotEmpty ? element.excerpt : null,
-            subtitleMaxLines: 2,
             onTap: () {
               final url = element.type == 'question'
                   ? 'https://www.zhihu.com/question/${element.id}'

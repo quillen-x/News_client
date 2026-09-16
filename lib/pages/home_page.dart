@@ -3,18 +3,24 @@ import 'dart:async';
 import 'package:data_statistics/db/db_helper.dart';
 import 'package:data_statistics/models/baidu_model.dart' as baidu;
 import 'package:data_statistics/models/hupu_model.dart';
+import 'package:data_statistics/models/hupu_nba_model.dart';
 import 'package:data_statistics/models/huxiu_model.dart';
 import 'package:data_statistics/models/ithome_model.dart';
 import 'package:data_statistics/models/juejin_model.dart';
 import 'package:data_statistics/models/kr36_model.dart';
+import 'package:data_statistics/models/netease_model.dart';
+import 'package:data_statistics/models/qqmusic_model.dart';
 import 'package:data_statistics/models/sohu_model.dart';
 import 'package:data_statistics/models/weibo_model.dart' as weibo;
 import 'package:data_statistics/models/zhihu_model.dart';
+import 'package:data_statistics/pages/news_page/hupu_nba_page.dart';
 import 'package:data_statistics/pages/news_page/hupu_page.dart';
 import 'package:data_statistics/pages/news_page/huxiu_page.dart';
 import 'package:data_statistics/pages/news_page/ithome_page.dart';
 import 'package:data_statistics/pages/news_page/juejin_page.dart';
 import 'package:data_statistics/pages/news_page/kr36_page.dart';
+import 'package:data_statistics/pages/news_page/netease_page.dart';
+import 'package:data_statistics/pages/news_page/qqmusic_page.dart';
 import 'package:data_statistics/pages/news_page/weibo_page.dart';
 import 'package:data_statistics/pages/news_page/zhihu_page.dart';
 import 'package:data_statistics/pages/news_webview_page.dart';
@@ -43,6 +49,9 @@ class _HomePageState extends State<HomePage> {
   List<IthomeDetailModel> ithomeDetailModelList = [];
   List<JuejinDetailModel> juejinDetailModelList = [];
   List<HupuDetailModel> hupuDetailModelList = [];
+  List<QqMusicDetailModel> qqMusicDetailModelList = [];
+  List<NeteaseDetailModel> neteaseDetailModelList = [];
+  List<HupuNbaDetailModel> hupuNbaDetailModelList = [];
 
   Timer? _refreshTimer;
   bool _isRefreshing = false;
@@ -85,6 +94,9 @@ class _HomePageState extends State<HomePage> {
         getIthomeData(),
         getJuejinData(),
         getHupuData(),
+        getQqMusicData(),
+        getNeteaseData(),
+        getHupuNbaData(),
       ]);
 
       await getAllNews();
@@ -108,6 +120,9 @@ class _HomePageState extends State<HomePage> {
       DbHelper.instance.ithomeTable.query(),
       DbHelper.instance.juejinTable.query(),
       DbHelper.instance.hupuTable.query(),
+      DbHelper.instance.qqMusicTable.query(),
+      DbHelper.instance.neteaseTable.query(),
+      DbHelper.instance.hupuNbaTable.query(),
     ]);
 
     if (!mounted) return;
@@ -122,6 +137,9 @@ class _HomePageState extends State<HomePage> {
       ithomeDetailModelList = results[6] as List<IthomeDetailModel>;
       juejinDetailModelList = results[7] as List<JuejinDetailModel>;
       hupuDetailModelList = results[8] as List<HupuDetailModel>;
+      qqMusicDetailModelList = results[9] as List<QqMusicDetailModel>;
+      neteaseDetailModelList = results[10] as List<NeteaseDetailModel>;
+      hupuNbaDetailModelList = results[11] as List<HupuNbaDetailModel>;
     });
   }
 
@@ -159,6 +177,24 @@ class _HomePageState extends State<HomePage> {
     final list = await Api.getHupuBxjNews();
     if (list.isEmpty) return;
     await DbHelper.instance.hupuTable.insertHotBatch(list);
+  }
+
+  Future<void> getQqMusicData() async {
+    final list = await Api.getQqMusicHotSongs();
+    if (list.isEmpty) return;
+    await DbHelper.instance.qqMusicTable.insertHotBatch(list);
+  }
+
+  Future<void> getNeteaseData() async {
+    final list = await Api.getNeteaseHotSongs();
+    if (list.isEmpty) return;
+    await DbHelper.instance.neteaseTable.insertHotBatch(list);
+  }
+
+  Future<void> getHupuNbaData() async {
+    final list = await Api.getHupuNbaNews();
+    if (list.isEmpty) return;
+    await DbHelper.instance.hupuNbaTable.insertHotBatch(list);
   }
 
   Future<void> getWeiboData() async {
@@ -215,7 +251,7 @@ class _HomePageState extends State<HomePage> {
             backgroundColor: Theme.of(context).scaffoldBackgroundColor,
             body: SafeArea(
               child: Padding(
-                padding: EdgeInsets.fromLTRB(14.w, 14.h, 14.w, 14.h),
+                padding: EdgeInsets.fromLTRB(8.w, 8.h, 8.w, 8.h),
                 child: newsWidget(),
               ),
             ),
@@ -237,13 +273,16 @@ class _HomePageState extends State<HomePage> {
       IthomePage(modelList: ithomeDetailModelList),
       JuejinPage(modelList: juejinDetailModelList),
       HupuPage(modelList: hupuDetailModelList),
+      QqMusicPage(modelList: qqMusicDetailModelList),
+      NeteasePage(modelList: neteaseDetailModelList),
+      HupuNbaPage(modelList: hupuNbaDetailModelList),
     ];
 
     return LayoutBuilder(
       builder: (context, constraints) {
         const columns = 4;
-        final rowGap = 12.h;
-        final colGap = 12.w;
+        final rowGap = 6.h;
+        final colGap = 6.w;
         final halfHeight = (constraints.maxHeight - rowGap) / 2;
         final rows = <Widget>[];
 

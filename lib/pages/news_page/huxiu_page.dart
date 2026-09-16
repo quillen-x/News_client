@@ -20,9 +20,6 @@ class HuxiuPage extends StatelessWidget {
           final element = modelList[index];
           return NewsListItem(
             title: element.title,
-            subtitle: (element.summary != null && element.summary!.isNotEmpty)
-                ? element.summary
-                : null,
             onTap: () {
               NewsWebViewPage.open(
                 context,
