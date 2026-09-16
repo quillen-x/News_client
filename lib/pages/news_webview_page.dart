@@ -103,7 +103,7 @@ class _NewsWebViewHostState extends State<NewsWebViewHost> {
         if (_controller != null && _title != null)
           Positioned.fill(
             child: Material(
-              color: Colors.white,
+              color: Theme.of(context).scaffoldBackgroundColor,
               child: Column(
                 children: [
                   _buildToolbar(context),
@@ -139,9 +139,9 @@ class _NewsWebViewHostState extends State<NewsWebViewHost> {
       height: 44.h,
       padding: EdgeInsets.symmetric(horizontal: 8.w),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).scaffoldBackgroundColor,
         border: Border(
-          bottom: BorderSide(color: Colors.black.withValues(alpha: 0.08)),
+          bottom: BorderSide(color: Theme.of(context).dividerColor),
         ),
       ),
       child: Row(

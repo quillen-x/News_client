@@ -3,6 +3,8 @@ import 'dart:io';
 
 import 'package:data_statistics/db/db_helper.dart';
 import 'package:data_statistics/pages/home_page.dart';
+import 'package:data_statistics/theme/app_theme.dart';
+import 'package:data_statistics/theme/theme_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:webview_flutter/webview_flutter.dart';
@@ -47,29 +49,20 @@ class MyApp extends StatelessWidget {
       minTextAdapt: true,
       splitScreenMode: true,
       builder: (context, child) {
-        return MaterialApp(
-          debugShowCheckedModeBanner: false,
-          scrollBehavior: const MaterialScrollBehavior().copyWith(
-            scrollbars: false,
-          ),
-          theme: ThemeData(
-            fontFamily: 'AlibabaPuHuiTi',
-            textTheme: TextTheme(
-              labelSmall: TextStyle(
-                fontSize: 10.sp,
-                fontWeight: FontWeight.w300,
+        return ListenableBuilder(
+          listenable: ThemeController.instance,
+          builder: (context, _) {
+            return MaterialApp(
+              debugShowCheckedModeBanner: false,
+              scrollBehavior: const MaterialScrollBehavior().copyWith(
+                scrollbars: false,
               ),
-              bodyLarge: TextStyle(
-                fontSize: 15.sp,
-                fontWeight: FontWeight.w500,
-              ),
-              bodyMedium: TextStyle(
-                fontSize: 12.sp,
-                fontWeight: FontWeight.w300,
-              ),
-            ),
-          ),
-          home: const HomePage(),
+              theme: AppTheme.light(),
+              darkTheme: AppTheme.dark(),
+              themeMode: ThemeController.instance.themeMode,
+              home: const HomePage(),
+            );
+          },
         );
       },
     );

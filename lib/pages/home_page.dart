@@ -9,6 +9,7 @@ import 'package:data_statistics/pages/news_page/weibo_page.dart';
 import 'package:data_statistics/pages/news_page/zhihu_page.dart';
 import 'package:data_statistics/pages/news_webview_page.dart';
 import 'package:data_statistics/request/api.dart';
+import 'package:data_statistics/widgets/theme_settings_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'news_page/baidu_page.dart';
@@ -147,12 +148,17 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return NewsWebViewHost(
-      child: Scaffold(
-        backgroundColor: Colors.white,
-        body: Padding(
-          padding: EdgeInsets.all(12.w),
-          child: newsWidget(),
-        ),
+      child: Stack(
+        children: [
+          Scaffold(
+            backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+            body: Padding(
+              padding: EdgeInsets.all(12.w),
+              child: newsWidget(),
+            ),
+          ),
+          const ThemeSettingsButton(),
+        ],
       ),
     );
   }
