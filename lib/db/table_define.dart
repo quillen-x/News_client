@@ -4,6 +4,11 @@ class DSTableDefine {
   static const String zhihuTable = 'zhihuTable';
   static const String weiboTable = 'weiboTable';
   static const String sohuTable = 'sohuTable';
+  static const String kr36Table = 'kr36Table';
+  static const String huxiuTable = 'huxiuTable';
+  static const String ithomeTable = 'ithomeTable';
+  static const String juejinTable = 'juejinTable';
+  static const String hupuTable = 'hupuTable';
 
   /// 每个平台最多保留的热榜条数
   static const int maxHotRecords = 60;
@@ -83,6 +88,69 @@ class DSTableDefine {
         "title"  TEXT,
         "url"  TEXT,
         "img"  TEXT,
+        "itemid"  TEXT,
+        "create"  TEXT
+      );
+      ''';
+  }
+
+  createKr36Table() {
+    return '''
+      CREATE TABLE IF NOT EXISTS $kr36Table (
+        "id"    INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+        "title"  TEXT,
+        "url"  TEXT,
+        "summary"  TEXT,
+        "itemid"  TEXT,
+        "create"  TEXT
+      );
+      ''';
+  }
+
+  createHuxiuTable() {
+    return '''
+      CREATE TABLE IF NOT EXISTS $huxiuTable (
+        "id"    INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+        "title"  TEXT,
+        "url"  TEXT,
+        "summary"  TEXT,
+        "itemid"  TEXT,
+        "create"  TEXT
+      );
+      ''';
+  }
+
+  createIthomeTable() {
+    return '''
+      CREATE TABLE IF NOT EXISTS $ithomeTable (
+        "id"    INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+        "title"  TEXT,
+        "url"  TEXT,
+        "itemid"  TEXT,
+        "create"  TEXT
+      );
+      ''';
+  }
+
+  createJuejinTable() {
+    return '''
+      CREATE TABLE IF NOT EXISTS $juejinTable (
+        "id"    INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+        "title"  TEXT,
+        "url"  TEXT,
+        "summary"  TEXT,
+        "itemid"  TEXT,
+        "create"  TEXT
+      );
+      ''';
+  }
+
+  createHupuTable() {
+    return '''
+      CREATE TABLE IF NOT EXISTS $hupuTable (
+        "id"    INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+        "title"  TEXT,
+        "url"  TEXT,
         "itemid"  TEXT,
         "create"  TEXT
       );

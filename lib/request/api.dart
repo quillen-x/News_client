@@ -1,6 +1,11 @@
 import 'dart:convert';
 
 import 'package:data_statistics/models/baidu_model.dart';
+import 'package:data_statistics/models/hupu_model.dart';
+import 'package:data_statistics/models/huxiu_model.dart';
+import 'package:data_statistics/models/ithome_model.dart';
+import 'package:data_statistics/models/juejin_model.dart';
+import 'package:data_statistics/models/kr36_model.dart';
 import 'package:data_statistics/models/sohu_model.dart';
 import 'package:data_statistics/models/weibo_model.dart' as weibo;
 import 'package:data_statistics/models/zhihu_model.dart';
@@ -168,6 +173,286 @@ class Api {
     }
   }
 
+  static Future<List<Kr36DetailModel>> getKr36News() async {
+    const pageUrl = 'https://www.36kr.com/information/web_news/latest/';
+    try {
+      final response = await _dio.get(
+        pageUrl,
+        options: Options(
+          responseType: ResponseType.plain,
+          headers: {
+            'Referer': 'https://www.36kr.com/',
+            'Accept':
+                'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+          },
+        ),
+      );
+      final html = response.data?.toString() ?? '';
+      final initialState = _parseWindowJson(html, 'window.initialState=');
+      if (initialState == null) return [];
+
+      final itemList =
+          initialState['information']?['informationList']?['itemList'];
+      if (itemList is! List) return [];
+
+      final articles = <Kr36DetailModel>[];
+      for (final item in itemList) {
+        if (item is! Map) continue;
+        final map = Map<String, dynamic>.from(item);
+        final material = map['templateMaterial'];
+        if (material is! Map) continue;
+        final materialMap = Map<String, dynamic>.from(material);
+
+        final itemId = map['itemId']?.toString() ??
+            materialMap['itemId']?.toString() ??
+            '';
+        final title = materialMap['widgetTitle']?.toString() ?? '';
+        if (itemId.isEmpty || title.isEmpty) continue;
+
+        final publishTime = materialMap['publishTime'];
+        articles.add(Kr36DetailModel(
+          title: title,
+          url: 'https://www.36kr.com/p/$itemId',
+          summary: materialMap['summary']?.toString(),
+          itemid: itemId,
+          create: publishTime?.toString() ??
+              DateTime.now().millisecondsSinceEpoch.toString(),
+        ));
+      }
+      return articles.take(60).toList();
+    } catch (e, st) {
+      debugPrint('[Api] 36氪资讯失败: $e\n$st');
+      return [];
+    }
+  }
+
+  static Future<List<HuxiuDetailModel>> getHuxiuNews() async {
+    try {
+      final response = await _dio.get(
+        'https://api-article.huxiu.com/web/article/articleList',
+        queryParameters: {
+          'platform': 'www',
+          'page': 1,
+        },
+        options: Options(headers: {
+          'Referer': 'https://www.huxiu.com/article/',
+          'Origin': 'https://www.huxiu.com',
+          'Accept': 'application/json, text/plain, */*',
+        }),
+      );
+      final body = _asJsonMap(response.data);
+      final list = body['data']?['dataList'];
+      if (list is! List) return [];
+
+      final articles = <HuxiuDetailModel>[];
+      for (final item in list) {
+        if (item is! Map) continue;
+        final map = Map<String, dynamic>.from(item);
+        final aid = map['aid']?.toString() ?? '';
+        final title = map['title']?.toString() ?? '';
+        if (aid.isEmpty || title.isEmpty) continue;
+
+        final summary = map['summary']?.toString();
+        articles.add(HuxiuDetailModel(
+          title: title,
+          url: 'https://www.huxiu.com/article/$aid.html',
+          summary: (summary != null && summary.isNotEmpty) ? summary : null,
+          itemid: aid,
+          create: map['dateline']?.toString() ??
+              DateTime.now().millisecondsSinceEpoch.toString(),
+        ));
+      }
+      return articles.take(60).toList();
+    } catch (e, st) {
+      debugPrint('[Api] 虎嗅资讯失败: $e\n$st');
+      return [];
+    }
+  }
+
+  static Future<List<IthomeDetailModel>> getIthomeHotNews() async {
+    try {
+      final response = await _dio.get(
+        'https://www.ithome.com/block/rank.html',
+        options: Options(
+          responseType: ResponseType.plain,
+          headers: {
+            'Referer': 'https://www.ithome.com/',
+            'Accept':
+                'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+          },
+        ),
+      );
+      final html = response.data?.toString() ?? '';
+      return _parseIthomeDailyRank(html);
+    } catch (e, st) {
+      debugPrint('[Api] IT之家热榜失败: $e\n$st');
+      return [];
+    }
+  }
+
+  /// 解析 IT之家日榜（#d-1）
+  static List<IthomeDetailModel> _parseIthomeDailyRank(String html) {
+    final start = html.indexOf('id="d-1"');
+    if (start == -1) return [];
+    final end = html.indexOf('id="d-2"', start);
+    final section = end == -1 ? html.substring(start) : html.substring(start, end);
+
+    final pattern = RegExp(
+      r'<a[^>]*href="(https://www\.ithome\.com/\d+/\d+/\d+\.htm)"[^>]*>(.*?)</a>',
+      caseSensitive: false,
+      dotAll: true,
+    );
+
+    final articles = <IthomeDetailModel>[];
+    final seen = <String>{};
+    final baseTime = DateTime.now().millisecondsSinceEpoch;
+    var index = 0;
+
+    for (final match in pattern.allMatches(section)) {
+      final url = match.group(1) ?? '';
+      var title = (match.group(2) ?? '')
+          .replaceAll(RegExp(r'<[^>]*>'), '')
+          .replaceAll('&nbsp;', ' ')
+          .replaceAll('&amp;', '&')
+          .replaceAll('&lt;', '<')
+          .replaceAll('&gt;', '>')
+          .replaceAll('&quot;', '"')
+          .trim();
+      if (url.isEmpty || title.isEmpty || !seen.add(url)) continue;
+
+      articles.add(IthomeDetailModel(
+        title: title,
+        url: url,
+        itemid: url,
+        create: (baseTime - index).toString(),
+      ));
+      index++;
+    }
+    return articles.take(60).toList();
+  }
+
+  static Future<List<JuejinDetailModel>> getJuejinNews() async {
+    try {
+      final response = await _dio.post(
+        'https://api.juejin.cn/recommend_api/v1/article/recommend_all_feed',
+        queryParameters: {
+          'aid': 2608,
+          'uuid': 0,
+          'spider': 0,
+        },
+        data: {
+          'id_type': 2,
+          'client_type': 2608,
+          'sort_type': 300, // 最新
+          'cursor': '0',
+          'limit': 20,
+        },
+        options: Options(headers: {
+          'Referer': 'https://juejin.cn/?sort=newest',
+          'Origin': 'https://juejin.cn',
+          'Content-Type': 'application/json',
+          'Accept': 'application/json, text/plain, */*',
+        }),
+      );
+      final body = _asJsonMap(response.data);
+      final list = body['data'];
+      if (list is! List) return [];
+
+      final articles = <JuejinDetailModel>[];
+      for (final item in list) {
+        if (item is! Map) continue;
+        final map = Map<String, dynamic>.from(item);
+        final itemInfo = map['item_info'];
+        if (itemInfo is! Map) continue;
+        final infoMap = Map<String, dynamic>.from(itemInfo);
+        final articleInfo = infoMap['article_info'];
+        if (articleInfo is! Map) continue;
+        final article = Map<String, dynamic>.from(articleInfo);
+
+        final articleId = article['article_id']?.toString() ??
+            infoMap['article_id']?.toString() ??
+            '';
+        final title = article['title']?.toString() ?? '';
+        if (articleId.isEmpty || title.isEmpty) continue;
+
+        final brief = article['brief_content']?.toString();
+        articles.add(JuejinDetailModel(
+          title: title,
+          url: 'https://juejin.cn/post/$articleId',
+          summary: (brief != null && brief.isNotEmpty) ? brief : null,
+          itemid: articleId,
+          create: article['ctime']?.toString() ??
+              DateTime.now().millisecondsSinceEpoch.toString(),
+        ));
+      }
+      return articles.take(60).toList();
+    } catch (e, st) {
+      debugPrint('[Api] 掘金最新失败: $e\n$st');
+      return [];
+    }
+  }
+
+  static Future<List<HupuDetailModel>> getHupuBxjNews() async {
+    try {
+      final response = await _dio.get(
+        'https://bbs.hupu.com/bxj',
+        options: Options(
+          responseType: ResponseType.plain,
+          headers: {
+            'Referer': 'https://bbs.hupu.com/',
+            'Accept':
+                'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+          },
+        ),
+      );
+      final html = response.data?.toString() ?? '';
+      return _parseHupuBxj(html);
+    } catch (e, st) {
+      debugPrint('[Api] 虎扑步行街失败: $e\n$st');
+      return [];
+    }
+  }
+
+  /// 解析虎扑步行街主干道帖子列表
+  static List<HupuDetailModel> _parseHupuBxj(String html) {
+    final pattern = RegExp(
+      r'href="(/\d+\.html)"[^>]*class="[^"]*p-title[^"]*"[^>]*>(.*?)</a>',
+      caseSensitive: false,
+      dotAll: true,
+    );
+
+    final articles = <HupuDetailModel>[];
+    final seen = <String>{};
+    final baseTime = DateTime.now().millisecondsSinceEpoch;
+    var index = 0;
+
+    for (final match in pattern.allMatches(html)) {
+      final path = match.group(1) ?? '';
+      var title = _stripHtml(match.group(2) ?? '');
+      if (path.isEmpty || title.isEmpty || !seen.add(path)) continue;
+
+      articles.add(HupuDetailModel(
+        title: title,
+        url: 'https://bbs.hupu.com$path',
+        itemid: path,
+        create: (baseTime - index).toString(),
+      ));
+      index++;
+    }
+    return articles.take(60).toList();
+  }
+
+  static String _stripHtml(String raw) {
+    return raw
+        .replaceAll(RegExp(r'<[^>]*>'), '')
+        .replaceAll('&nbsp;', ' ')
+        .replaceAll('&amp;', '&')
+        .replaceAll('&lt;', '<')
+        .replaceAll('&gt;', '>')
+        .replaceAll('&quot;', '"')
+        .trim();
+  }
+
   /// 仅解析 feed-constsize-text-pc 模块的纯文字新闻
   static List<SohuDetailModel> _parseFeedConstsizeText(
     Map<String, dynamic> blockData,
@@ -210,7 +495,10 @@ class Api {
   }
 
   static Map<String, dynamic>? _parseBlockRenderData(String html) {
-    const marker = 'window.blockRenderData = ';
+    return _parseWindowJson(html, 'window.blockRenderData = ');
+  }
+
+  static Map<String, dynamic>? _parseWindowJson(String html, String marker) {
     final idx = html.indexOf(marker);
     if (idx == -1) return null;
 

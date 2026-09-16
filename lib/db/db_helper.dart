@@ -1,24 +1,31 @@
 import 'dart:io';
 
 import 'package:data_statistics/db/table/baidu_table.dart';
+import 'package:data_statistics/db/table/hupu_table.dart';
+import 'package:data_statistics/db/table/huxiu_table.dart';
+import 'package:data_statistics/db/table/ithome_table.dart';
+import 'package:data_statistics/db/table/juejin_table.dart';
+import 'package:data_statistics/db/table/kr36_table.dart';
 import 'package:data_statistics/db/table/sohu_table.dart';
 import 'package:data_statistics/db/table/weibo_table.dart';
 import 'package:data_statistics/db/table/zhihu_table.dart';
 import 'package:data_statistics/db/table_define.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart' as p;
-
 import 'package:path_provider/path_provider.dart';
-
 
 /// 数据库帮助类
 class DbHelper {
   DSTableDefine dsTableDefine = DSTableDefine();
-  // CategoryTable categoryTable = CategoryTable();
   ZhihuTable zhihuTable = ZhihuTable();
   BaiduTable baiduTable = BaiduTable();
   WeiboTable weiboTable = WeiboTable();
   SohuTable sohuTable = SohuTable();
+  Kr36Table kr36Table = Kr36Table();
+  HuxiuTable huxiuTable = HuxiuTable();
+  IthomeTable ithomeTable = IthomeTable();
+  JuejinTable juejinTable = JuejinTable();
+  HupuTable hupuTable = HupuTable();
 
   //私有构造
   DbHelper._();
@@ -32,45 +39,55 @@ class DbHelper {
     return _instance ?? DbHelper._();
   }
 
-  /// 数据库默认存储的路径
-  /// SQLite 数据库是文件系统中由路径标识的文件。如果是relative，
-  /// 这个路径是相对于 获取的路径getDatabasesPath()，
-  /// Android默认的数据库目录，
-  /// iOS/MacOS的documents目录。
-
   Future<Database>? _db;
 
   Future<Database> getDb() {
     return _db ??= _initDb();
   }
 
-  // Guaranteed to be called only once.保证只调用一次
   Future<Database> _initDb() async {
-    // 这里是我们真正创建数据库的地方 vserion代表数据库的版本，如果版本改变
-    //，则db会调用onUpgrade方法进行更新操作
-    
     Directory path = await getApplicationDocumentsDirectory();
 
     final db = await openDatabase(p.join(path.path, 'statistics', 'hot.db'),
-        version: 2, onCreate: (db, version) {
+        version: 5, onCreate: (db, version) {
       db.execute(dsTableDefine.createBaiduTable());
       db.execute(dsTableDefine.createZhihuTable());
       db.execute(dsTableDefine.createWeiboTable());
       db.execute(dsTableDefine.createSohuTable());
+      db.execute(dsTableDefine.createKr36Table());
+      db.execute(dsTableDefine.createHuxiuTable());
+      db.execute(dsTableDefine.createIthomeTable());
+      db.execute(dsTableDefine.createJuejinTable());
+      db.execute(dsTableDefine.createHupuTable());
     }, onUpgrade: (db, oldV, newV) async {
       if (oldV < 2) {
         await db.execute(dsTableDefine.createSohuTable());
       }
+      if (oldV < 3) {
+        await db.execute(dsTableDefine.createKr36Table());
+      }
+      if (oldV < 4) {
+        await db.execute(dsTableDefine.createHuxiuTable());
+        await db.execute(dsTableDefine.createIthomeTable());
+      }
+      if (oldV < 5) {
+        await db.execute(dsTableDefine.createJuejinTable());
+        await db.execute(dsTableDefine.createHupuTable());
+      }
     });
-    
+
     weiboTable.database = db;
     baiduTable.database = db;
     zhihuTable.database = db;
     sohuTable.database = db;
+    kr36Table.database = db;
+    huxiuTable.database = db;
+    ithomeTable.database = db;
+    juejinTable.database = db;
+    hupuTable.database = db;
     return db;
   }
 
-// 关闭数据库
   close() async {
     await _db?.then((value) => value.close());
   }

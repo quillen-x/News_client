@@ -2,9 +2,19 @@ import 'dart:async';
 
 import 'package:data_statistics/db/db_helper.dart';
 import 'package:data_statistics/models/baidu_model.dart' as baidu;
+import 'package:data_statistics/models/hupu_model.dart';
+import 'package:data_statistics/models/huxiu_model.dart';
+import 'package:data_statistics/models/ithome_model.dart';
+import 'package:data_statistics/models/juejin_model.dart';
+import 'package:data_statistics/models/kr36_model.dart';
 import 'package:data_statistics/models/sohu_model.dart';
 import 'package:data_statistics/models/weibo_model.dart' as weibo;
 import 'package:data_statistics/models/zhihu_model.dart';
+import 'package:data_statistics/pages/news_page/hupu_page.dart';
+import 'package:data_statistics/pages/news_page/huxiu_page.dart';
+import 'package:data_statistics/pages/news_page/ithome_page.dart';
+import 'package:data_statistics/pages/news_page/juejin_page.dart';
+import 'package:data_statistics/pages/news_page/kr36_page.dart';
 import 'package:data_statistics/pages/news_page/weibo_page.dart';
 import 'package:data_statistics/pages/news_page/zhihu_page.dart';
 import 'package:data_statistics/pages/news_webview_page.dart';
@@ -12,6 +22,7 @@ import 'package:data_statistics/request/api.dart';
 import 'package:data_statistics/widgets/theme_settings_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+
 import 'news_page/baidu_page.dart';
 import 'news_page/sohu_page.dart';
 
@@ -27,6 +38,11 @@ class _HomePageState extends State<HomePage> {
   List<baidu.BDDetailModel> dDDetailModelList = [];
   List<weibo.WBDetailModel> wbDetailModelList = [];
   List<SohuDetailModel> sohuDetailModelList = [];
+  List<Kr36DetailModel> kr36DetailModelList = [];
+  List<HuxiuDetailModel> huxiuDetailModelList = [];
+  List<IthomeDetailModel> ithomeDetailModelList = [];
+  List<JuejinDetailModel> juejinDetailModelList = [];
+  List<HupuDetailModel> hupuDetailModelList = [];
 
   Timer? _refreshTimer;
   bool _isRefreshing = false;
@@ -64,6 +80,11 @@ class _HomePageState extends State<HomePage> {
         getBaiduData(),
         getWeiboData(),
         getSohuData(),
+        getKr36Data(),
+        getHuxiuData(),
+        getIthomeData(),
+        getJuejinData(),
+        getHupuData(),
       ]);
 
       await getAllNews();
@@ -82,6 +103,11 @@ class _HomePageState extends State<HomePage> {
       DbHelper.instance.baiduTable.query(),
       DbHelper.instance.weiboTable.query(),
       DbHelper.instance.sohuTable.query(),
+      DbHelper.instance.kr36Table.query(),
+      DbHelper.instance.huxiuTable.query(),
+      DbHelper.instance.ithomeTable.query(),
+      DbHelper.instance.juejinTable.query(),
+      DbHelper.instance.hupuTable.query(),
     ]);
 
     if (!mounted) return;
@@ -91,6 +117,11 @@ class _HomePageState extends State<HomePage> {
       dDDetailModelList = results[1] as List<baidu.BDDetailModel>;
       wbDetailModelList = results[2] as List<weibo.WBDetailModel>;
       sohuDetailModelList = results[3] as List<SohuDetailModel>;
+      kr36DetailModelList = results[4] as List<Kr36DetailModel>;
+      huxiuDetailModelList = results[5] as List<HuxiuDetailModel>;
+      ithomeDetailModelList = results[6] as List<IthomeDetailModel>;
+      juejinDetailModelList = results[7] as List<JuejinDetailModel>;
+      hupuDetailModelList = results[8] as List<HupuDetailModel>;
     });
   }
 
@@ -98,6 +129,36 @@ class _HomePageState extends State<HomePage> {
     final list = await Api.getSohuNbaNews();
     if (list.isEmpty) return;
     await DbHelper.instance.sohuTable.insertHotBatch(list);
+  }
+
+  Future<void> getKr36Data() async {
+    final list = await Api.getKr36News();
+    if (list.isEmpty) return;
+    await DbHelper.instance.kr36Table.insertHotBatch(list);
+  }
+
+  Future<void> getHuxiuData() async {
+    final list = await Api.getHuxiuNews();
+    if (list.isEmpty) return;
+    await DbHelper.instance.huxiuTable.insertHotBatch(list);
+  }
+
+  Future<void> getIthomeData() async {
+    final list = await Api.getIthomeHotNews();
+    if (list.isEmpty) return;
+    await DbHelper.instance.ithomeTable.insertHotBatch(list);
+  }
+
+  Future<void> getJuejinData() async {
+    final list = await Api.getJuejinNews();
+    if (list.isEmpty) return;
+    await DbHelper.instance.juejinTable.insertHotBatch(list);
+  }
+
+  Future<void> getHupuData() async {
+    final list = await Api.getHupuBxjNews();
+    if (list.isEmpty) return;
+    await DbHelper.instance.hupuTable.insertHotBatch(list);
   }
 
   Future<void> getWeiboData() async {
@@ -152,9 +213,11 @@ class _HomePageState extends State<HomePage> {
         children: [
           Scaffold(
             backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-            body: Padding(
-              padding: EdgeInsets.all(12.w),
-              child: newsWidget(),
+            body: SafeArea(
+              child: Padding(
+                padding: EdgeInsets.fromLTRB(14.w, 14.h, 14.w, 14.h),
+                child: newsWidget(),
+              ),
             ),
           ),
           const ThemeSettingsButton(),
@@ -164,15 +227,57 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget newsWidget() {
+    final platforms = <Widget>[
+      WeiboPage(modelList: wbDetailModelList),
+      ZhihuPage(modelList: zHDetailModelList),
+      BaiduPage(modelList: dDDetailModelList),
+      SohuPage(modelList: sohuDetailModelList),
+      Kr36Page(modelList: kr36DetailModelList),
+      HuxiuPage(modelList: huxiuDetailModelList),
+      IthomePage(modelList: ithomeDetailModelList),
+      JuejinPage(modelList: juejinDetailModelList),
+      HupuPage(modelList: hupuDetailModelList),
+    ];
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        const columns = 4;
+        final rowGap = 12.h;
+        final colGap = 12.w;
+        final halfHeight = (constraints.maxHeight - rowGap) / 2;
+        final rows = <Widget>[];
+
+        for (var i = 0; i < platforms.length; i += columns) {
+          final rowChildren = platforms.skip(i).take(columns).toList();
+          if (rows.isNotEmpty) {
+            rows.add(SizedBox(height: rowGap));
+          }
+          rows.add(
+            SizedBox(
+              height: halfHeight,
+              child: _buildPlatformRow(rowChildren, columns, colGap),
+            ),
+          );
+        }
+
+        return SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
+          child: Column(children: rows),
+        );
+      },
+    );
+  }
+
+  Widget _buildPlatformRow(List<Widget> children, int columns, double gap) {
     return Row(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Expanded(child: WeiboPage(modelList: wbDetailModelList)),
-        SizedBox(width: 10.w),
-        Expanded(child: ZhihuPage(modelList: zHDetailModelList)),
-        SizedBox(width: 10.w),
-        Expanded(child: BaiduPage(modelList: dDDetailModelList)),
-        SizedBox(width: 10.w),
-        Expanded(child: SohuPage(modelList: sohuDetailModelList)),
+        for (var i = 0; i < columns; i++) ...[
+          if (i > 0) SizedBox(width: gap),
+          Expanded(
+            child: i < children.length ? children[i] : const SizedBox.shrink(),
+          ),
+        ],
       ],
     );
   }

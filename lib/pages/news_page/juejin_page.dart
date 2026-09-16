@@ -1,18 +1,18 @@
-import 'package:data_statistics/models/weibo_model.dart';
+import 'package:data_statistics/models/juejin_model.dart';
 import 'package:data_statistics/pages/news_webview_page.dart';
 import 'package:data_statistics/widgets/news_list_item.dart';
 import 'package:data_statistics/widgets/platform_news_panel.dart';
 import 'package:flutter/material.dart';
 
-class WeiboPage extends StatelessWidget {
-  final List<WBDetailModel> modelList;
-  const WeiboPage({super.key, required this.modelList});
+class JuejinPage extends StatelessWidget {
+  final List<JuejinDetailModel> modelList;
+  const JuejinPage({super.key, required this.modelList});
 
   @override
   Widget build(BuildContext context) {
     return PlatformNewsPanel(
-      title: '微博热搜',
-      accentColor: const Color(0xFFE6162D),
+      title: '掘金最新',
+      accentColor: const Color(0xFF1E80FF),
       child: ListView.builder(
         padding: EdgeInsets.zero,
         itemCount: modelList.length,
@@ -20,14 +20,14 @@ class WeiboPage extends StatelessWidget {
           final element = modelList[index];
           return NewsListItem(
             title: element.title,
+            subtitle: (element.summary != null && element.summary!.isNotEmpty)
+                ? element.summary
+                : null,
             onTap: () {
-              final url = element.scheme.isNotEmpty
-                  ? element.scheme
-                  : 'https://s.weibo.com/weibo?q=${Uri.encodeComponent(element.title)}';
               NewsWebViewPage.open(
                 context,
                 title: element.title,
-                url: url,
+                url: element.url,
               );
             },
           );

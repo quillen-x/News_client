@@ -1,9 +1,8 @@
 import 'package:data_statistics/models/sohu_model.dart';
 import 'package:data_statistics/pages/news_webview_page.dart';
-import 'package:data_statistics/widgets/platform_section_header.dart';
+import 'package:data_statistics/widgets/news_list_item.dart';
+import 'package:data_statistics/widgets/platform_news_panel.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:grouped_list/grouped_list.dart';
 
 class SohuPage extends StatelessWidget {
   final List<SohuDetailModel> modelList;
@@ -11,57 +10,26 @@ class SohuPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GroupedListView<SohuDetailModel, String>(
-      elements: modelList,
-      groupBy: (element) {
-        final time = DateTime.fromMillisecondsSinceEpoch(
-          int.parse(element.create),
-        ).toString();
-        return time.substring(0, 10);
-      },
-      groupSeparatorBuilder: (String groupByValue) {
-        return const PlatformSectionHeader(
-          title: '搜狐 NBA',
-          color: Color(0xFFFF6600),
-        );
-      },
-      itemBuilder: (context, SohuDetailModel element) {
-        final timeTime = DateTime.fromMillisecondsSinceEpoch(
-          int.parse(element.create),
-        ).toString().substring(0, 16);
-        return InkWell(
-          onTap: () {
-            NewsWebViewPage.open(
-              context,
-              title: element.title,
-              url: element.url,
-            );
-          },
-          child: Padding(
-            padding: EdgeInsets.all(4.w),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  element.title,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: Theme.of(context).textTheme.bodyLarge,
-                ),
-                SizedBox(height: 4.h),
-                Text(
-                  timeTime,
-                  style: Theme.of(context).textTheme.labelSmall,
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-      itemComparator: (item1, item2) => item1.create.compareTo(item2.create),
-      useStickyGroupSeparators: false,
-      floatingHeader: false,
-      order: GroupedListOrder.DESC,
+    return PlatformNewsPanel(
+      title: '搜狐 NBA',
+      accentColor: const Color(0xFFFF6600),
+      child: ListView.builder(
+        padding: EdgeInsets.zero,
+        itemCount: modelList.length,
+        itemBuilder: (context, index) {
+          final element = modelList[index];
+          return NewsListItem(
+            title: element.title,
+            onTap: () {
+              NewsWebViewPage.open(
+                context,
+                title: element.title,
+                url: element.url,
+              );
+            },
+          );
+        },
+      ),
     );
   }
 }
