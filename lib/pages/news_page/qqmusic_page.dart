@@ -13,12 +13,14 @@ class QqMusicPage extends StatelessWidget {
     return PlatformNewsPanel(
       title: 'QQ音乐热歌榜',
       accentColor: const Color(0xFF31C27C),
+      itemCount: modelList.length,
       child: ListView.builder(
         padding: EdgeInsets.zero,
         itemCount: modelList.length,
         itemBuilder: (context, index) {
           final element = modelList[index];
           return NewsListItem(
+            rank: index + 1,
             title: element.title,
             onTap: () {
               NewsWebViewPage.open(

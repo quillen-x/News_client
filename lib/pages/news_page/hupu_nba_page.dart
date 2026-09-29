@@ -12,13 +12,15 @@ class HupuNbaPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return PlatformNewsPanel(
       title: '虎扑 NBA',
-      accentColor: const Color(0xFFFF6A00),
+      accentColor: const Color(0xFFC8102E),
+      itemCount: modelList.length,
       child: ListView.builder(
         padding: EdgeInsets.zero,
         itemCount: modelList.length,
         itemBuilder: (context, index) {
           final element = modelList[index];
           return NewsListItem(
+            rank: index + 1,
             title: element.title,
             onTap: () {
               NewsWebViewPage.open(

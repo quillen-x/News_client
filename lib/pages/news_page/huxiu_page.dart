@@ -13,12 +13,14 @@ class HuxiuPage extends StatelessWidget {
     return PlatformNewsPanel(
       title: '虎嗅',
       accentColor: const Color(0xFFFF5A00),
+      itemCount: modelList.length,
       child: ListView.builder(
         padding: EdgeInsets.zero,
         itemCount: modelList.length,
         itemBuilder: (context, index) {
           final element = modelList[index];
           return NewsListItem(
+            rank: index + 1,
             title: element.title,
             onTap: () {
               NewsWebViewPage.open(

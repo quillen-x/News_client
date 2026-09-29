@@ -135,9 +135,10 @@ class _NewsWebViewHostState extends State<NewsWebViewHost> {
   }
 
   Widget _buildToolbar(BuildContext context) {
+    final leftInset = Platform.isMacOS ? 78.w : 12.w;
     return Container(
-      height: 44.h,
-      padding: EdgeInsets.symmetric(horizontal: 8.w),
+      height: 52.h,
+      padding: EdgeInsets.only(left: leftInset, right: 8.w),
       decoration: BoxDecoration(
         color: Theme.of(context).scaffoldBackgroundColor,
         border: Border(
@@ -151,12 +152,12 @@ class _NewsWebViewHostState extends State<NewsWebViewHost> {
               _title ?? '',
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: Theme.of(context).textTheme.bodyLarge,
+              style: Theme.of(context).textTheme.titleSmall,
             ),
           ),
           IconButton(
             tooltip: '关闭页面',
-            icon: const Icon(Icons.close, size: 18),
+            icon: Icon(Icons.close_rounded, size: 18.sp),
             onPressed: close,
           ),
         ],

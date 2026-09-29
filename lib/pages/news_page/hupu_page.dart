@@ -13,12 +13,14 @@ class HupuPage extends StatelessWidget {
     return PlatformNewsPanel(
       title: '虎扑步行街',
       accentColor: const Color(0xFFC8102E),
+      itemCount: modelList.length,
       child: ListView.builder(
         padding: EdgeInsets.zero,
         itemCount: modelList.length,
         itemBuilder: (context, index) {
           final element = modelList[index];
           return NewsListItem(
+            rank: index + 1,
             title: element.title,
             onTap: () {
               NewsWebViewPage.open(

@@ -274,7 +274,7 @@ class _HomePageState extends State<HomePage> {
             backgroundColor: Theme.of(context).scaffoldBackgroundColor,
             body: SafeArea(
               child: Padding(
-                padding: EdgeInsets.fromLTRB(8.w, 8.h, 8.w, 8.h),
+                padding: EdgeInsets.fromLTRB(12.w, 12.h, 12.w, 12.h),
                 child: newsWidget(),
               ),
             ),
@@ -293,19 +293,19 @@ class _HomePageState extends State<HomePage> {
       Kr36Page(modelList: kr36DetailModelList),
       HupuPage(modelList: hupuDetailModelList),
       HupuNbaPage(modelList: hupuNbaDetailModelList),
-      QqMusicPage(modelList: qqMusicDetailModelList),
-      NeteasePage(modelList: neteaseDetailModelList),
       SohuPage(modelList: sohuDetailModelList),
       BaiduPage(modelList: dDDetailModelList),
       IthomePage(modelList: ithomeDetailModelList),
       JuejinPage(modelList: juejinDetailModelList),
+      QqMusicPage(modelList: qqMusicDetailModelList),
+      NeteasePage(modelList: neteaseDetailModelList),
     ];
 
     return LayoutBuilder(
       builder: (context, constraints) {
         const columns = 4;
-        final rowGap = 6.h;
-        final colGap = 6.w;
+        final rowGap = 12.h;
+        final colGap = 12.w;
         final halfHeight = (constraints.maxHeight - rowGap) / 2;
         final rows = <Widget>[];
 

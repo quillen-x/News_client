@@ -13,12 +13,14 @@ class JuejinPage extends StatelessWidget {
     return PlatformNewsPanel(
       title: '掘金推荐',
       accentColor: const Color(0xFF1E80FF),
+      itemCount: modelList.length,
       child: ListView.builder(
         padding: EdgeInsets.zero,
         itemCount: modelList.length,
         itemBuilder: (context, index) {
           final element = modelList[index];
           return NewsListItem(
+            rank: index + 1,
             title: element.title,
             onTap: () {
               NewsWebViewPage.open(

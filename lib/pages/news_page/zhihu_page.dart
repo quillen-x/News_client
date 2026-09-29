@@ -13,12 +13,14 @@ class ZhihuPage extends StatelessWidget {
     return PlatformNewsPanel(
       title: '知乎热榜',
       accentColor: const Color(0xFF0066FF),
+      itemCount: modelList.length,
       child: ListView.builder(
         padding: EdgeInsets.zero,
         itemCount: modelList.length,
         itemBuilder: (context, index) {
           final element = modelList[index];
           return NewsListItem(
+            rank: index + 1,
             title: element.title,
             onTap: () {
               final url = element.type == 'question'

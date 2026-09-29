@@ -4,22 +4,26 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 class PlatformSectionHeader extends StatelessWidget {
   final String title;
   final Color color;
+  final int itemCount;
 
   const PlatformSectionHeader({
     super.key,
     required this.title,
     required this.color,
+    required this.itemCount,
   });
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Padding(
-      padding: EdgeInsets.fromLTRB(12.w, 12.h, 12.w, 8.h),
+      padding: EdgeInsets.fromLTRB(14.w, 12.h, 14.w, 8.h),
       child: Row(
         children: [
           Container(
             width: 3.w,
-            height: 14.h,
+            height: 13.h,
             decoration: BoxDecoration(
               color: color,
               borderRadius: BorderRadius.circular(2.r),
@@ -31,11 +35,16 @@ class PlatformSectionHeader extends StatelessWidget {
               title,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                    color: color,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 0.2,
-                  ),
+              style: theme.textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.w700,
+                letterSpacing: 0.1,
+              ),
+            ),
+          ),
+          Text(
+            '$itemCount条',
+            style: theme.textTheme.bodyMedium?.copyWith(
+              fontSize: 11.sp,
             ),
           ),
         ],

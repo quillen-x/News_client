@@ -13,12 +13,14 @@ class NeteasePage extends StatelessWidget {
     return PlatformNewsPanel(
       title: '网易云热歌榜',
       accentColor: const Color(0xFFE60026),
+      itemCount: modelList.length,
       child: ListView.builder(
         padding: EdgeInsets.zero,
         itemCount: modelList.length,
         itemBuilder: (context, index) {
           final element = modelList[index];
           return NewsListItem(
+            rank: index + 1,
             title: element.title,
             onTap: () {
               NewsWebViewPage.open(

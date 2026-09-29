@@ -13,12 +13,14 @@ class WeiboPage extends StatelessWidget {
     return PlatformNewsPanel(
       title: '微博热搜',
       accentColor: const Color(0xFFE6162D),
+      itemCount: modelList.length,
       child: ListView.builder(
         padding: EdgeInsets.zero,
         itemCount: modelList.length,
         itemBuilder: (context, index) {
           final element = modelList[index];
           return NewsListItem(
+            rank: index + 1,
             title: element.title,
             onTap: () {
               final url = element.scheme.isNotEmpty

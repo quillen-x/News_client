@@ -2,6 +2,16 @@ import 'package:data_statistics/theme/theme_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
+void showThemeSettingsDialog(BuildContext context) {
+  showDialog<void>(
+    context: context,
+    barrierColor: Colors.black.withValues(alpha: 0.35),
+    builder: (dialogContext) {
+      return const _ThemeSettingsDialog();
+    },
+  );
+}
+
 class ThemeSettingsButton extends StatefulWidget {
   const ThemeSettingsButton({super.key});
 
@@ -13,13 +23,7 @@ class _ThemeSettingsButtonState extends State<ThemeSettingsButton> {
   bool _hovering = false;
 
   void _showThemeMenu(BuildContext context) {
-    showDialog<void>(
-      context: context,
-      barrierColor: Colors.black.withValues(alpha: 0.35),
-      builder: (dialogContext) {
-        return const _ThemeSettingsDialog();
-      },
-    );
+    showThemeSettingsDialog(context);
   }
 
   @override
@@ -78,7 +82,7 @@ class _ThemeSettingsDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    final panelColor = isDark ? const Color(0xFF1A1A1A) : Colors.white;
+    final panelColor = isDark ? const Color(0xFF14171E) : Colors.white;
     final borderColor = isDark
         ? Colors.white.withValues(alpha: 0.08)
         : Colors.black.withValues(alpha: 0.06);
@@ -225,9 +229,9 @@ class _ThemeOptionCardState extends State<_ThemeOptionCard> {
         : Colors.black.withValues(alpha: 0.03);
 
     final previewBg =
-        widget.previewLight ? const Color(0xFFF3F4F6) : const Color(0xFF101010);
+        widget.previewLight ? const Color(0xFFF3F5F8) : const Color(0xFF0B0D12);
     final previewPanel =
-        widget.previewLight ? const Color(0xFFFAFAFA) : const Color(0xFF1A1A1A);
+        widget.previewLight ? const Color(0xFFFFFFFF) : const Color(0xFF14171E);
     final previewLine = widget.previewLight
         ? Colors.black.withValues(alpha: 0.18)
         : Colors.white.withValues(alpha: 0.22);

@@ -13,12 +13,14 @@ class SohuPage extends StatelessWidget {
     return PlatformNewsPanel(
       title: '搜狐 NBA',
       accentColor: const Color(0xFFFF6600),
+      itemCount: modelList.length,
       child: ListView.builder(
         padding: EdgeInsets.zero,
         itemCount: modelList.length,
         itemBuilder: (context, index) {
           final element = modelList[index];
           return NewsListItem(
+            rank: index + 1,
             title: element.title,
             onTap: () {
               NewsWebViewPage.open(
